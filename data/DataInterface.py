@@ -25,12 +25,6 @@ class DataInterface(object):
     def enroll_user(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
-
-    """ Add user data """
-    def post_interaction(self, course_id, problem_name, user_id, correct):
-        raise NotImplementedError( "Data module must implement this" )
-
-
     """ Retrieve course information """
     def get_course_ids(self):
         raise NotImplementedError( "Data module must implement this" )
@@ -48,17 +42,33 @@ class DataInterface(object):
         raise NotImplementedError( "Data module must implement this" )
 
 
+    """ Add user data """
+    def post_interaction(self, course_id, problem_name, user_id, correct):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def set_next_problem(self, course_id, user_id, problem_name):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def advance_problem(self, course_id, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
     """ Retrieve user information """
     def get_all_remaining_problems(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
-    def get_remaining_problems(self, course_id, skill_id, user_id):
+    def get_remaining_problems(self, course_id, skill_name, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
     def get_all_interactions(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
-    def get_interactions(self, course_id, skill_id, user_id):
+    def get_interactions(self, course_id, skill_name, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_current_problem(self, course_id, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_next_problem(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
     def get_raw_user_data(self, course_id, user_id):
@@ -66,6 +76,8 @@ class DataInterface(object):
 
     def get_all_raw_data(self, course_id):
         raise NotImplementedError( "Data module must implement this" )
+    
+
 
     """ General backing store access: allows other modules
         access to persistent storage

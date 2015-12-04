@@ -1,11 +1,10 @@
 class ModelInterface(object):
-    """ This is the interface for the persistent data store
-    backing an edX-adapt course. It stores information about
-    courses, such as which skills they teach and which problems
-    are associated with those skills. It also stores user data,
-    such as which users are currently progressing through a
-    course, which users have finished the course, and logs of
-    the students' interactions with the problems.
+    """ This is the interface for the student model that models
+    the student mastery of the material. It is a stateless module,
+    so it stores no information about the student or the course.
+    It gets the trajectory of correctness (0 or 1),
+    and a set of parameters as a dictionary, and computes
+    the probabilty of getting the next question correct
     """
 
     def __init__(self):

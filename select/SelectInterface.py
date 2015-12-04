@@ -1,11 +1,8 @@
 class SelectInterface(object):
-    """ This is the interface for the persistent data store
-    backing an edX-adapt course. It stores information about
-    courses, such as which skills they teach and which problems
-    are associated with those skills. It also stores user data,
-    such as which users are currently progressing through a
-    course, which users have finished the course, and logs of
-    the students' interactions with the problems.
+    """ This is the interface for the adaptive problem
+    selection logic. It interacts with the inputted data interface and
+    the model interface to pick the next problem to give the user. It does
+    not directly store any information about the user or the course.
     """
 
     def __init__(self, data_interface, model_interface):

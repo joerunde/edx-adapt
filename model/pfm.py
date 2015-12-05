@@ -11,19 +11,16 @@ class PFM(ModelInterface):
 
     counts = [0, 0] # Number of problems the student got incorrect and correct respectively
 
-    def get_probability_correct(self, pretest_score, num_pretest, trajectory, parameters):
+    def get_probability_correct(self, num_pretest, trajectory, parameters):
         """
         Get the probability of getting the next problem correct according to the student model
 
-        :param pretest_score: number of problems the student got correct on the pre-test
-        :param num_pretest: total number of problems on the pre-test
+        :param num_pretest: number of pre-test problems in this trajectory
         :param trajectory: trajectory of binary variables indicating whether the student
                            got the problem correct
         :param parameters: dictionary of parameters defining the student model
         :return: the probability of getting the next problem correct
         """
-        self.counts[0] = num_pretest - pretest_score
-        self.counts[1] = pretest_score
         for correctness in trajectory:
             self.counts[correctness] += 1
         return self.get_current_probability_correct(parameters)

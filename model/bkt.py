@@ -10,20 +10,23 @@ class BKT(ModelInterface):
 
     alpha = [0, 0] # Forward probability vector
 
-    def get_probability_correct(self, pretest_score, num_pretest, trajectory, parameters):
+    def get_probability_correct(self, num_pretest, trajectory, parameters):
         """
         Get the probability of getting the next problem correct according to the student model
 
-        :param pretest_score: number of problems the student got correct on the pre-test
-        :param num_pretest: total number of problems on the pre-test
+        :param num_pretest: number of pre-test problems in this trajectory
         :param trajectory: trajectory of binary variables indicating whether the student
                            got the problem correct
         :param parameters: dictionary of parameters defining the student model
         :return: the probability of getting the next problem correct
         """
+        pretest_score = 0
+        for i in xrange(num_pretest):
+            pretest_score += trajectory[i]
+
         self.initialize_probability(parameters, pretest_score, num_pretest)
-        for correctness in trajectory:
-            self.update_probability(parameters, correctness)
+        for i in xrange(num_pretest + 1, len(trajectory)):
+            self.update_probability(parameters, trajectory[i])
         return self.get_current_probability_correct(parameters)
 
     def initialize_probability(self, params, pretest_score, num_pretest):

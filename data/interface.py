@@ -76,6 +76,12 @@ class DataInterface(object):
     def get_remaining_problems(self, course_id, skill_name, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
+    def get_all_remaining_posttest_problems(selfself, course_id, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_remaining_posttest_problems(selfself, course_id, skill_name, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
     def get_all_interactions(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
 

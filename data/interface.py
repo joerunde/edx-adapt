@@ -20,7 +20,12 @@ class DataInterface(object):
 
     def post_problem(self, course_id, skill_names, problem_name, tutor_url):
         raise NotImplementedError( "Data module must implement this" )
-        #test problems...?
+
+    def post_pretest_problem(self, course_id, skill_names, problem_name, tutor_url):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def post_posttest_problem(self, course_id, skill_names, problem_name, tutor_url):
+        raise NotImplementedError( "Data module must implement this" )
 
     def enroll_user(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
@@ -33,6 +38,12 @@ class DataInterface(object):
         raise NotImplementedError( "Data module must implement this" )
 
     def get_problems(self, course_id, skill_name):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_num_pretest(self, course_id, skill_name):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_num_posttest(self, course_id, skill_name):
         raise NotImplementedError( "Data module must implement this" )
 
     def get_in_progress_users(self, course_id):

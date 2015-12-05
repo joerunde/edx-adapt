@@ -8,6 +8,8 @@ class BKT(ModelInterface):
     the probability of getting the next problem correct
     """
 
+    alpha = [0, 0] # Forward probability vector
+
     def get_probability_correct(self, pretest_score, num_pretest, trajectory, parameters):
         """
         Get the probability of getting the next problem correct according to the student model
@@ -19,54 +21,50 @@ class BKT(ModelInterface):
         :param parameters: dictionary of parameters defining the student model
         :return: the probability of getting the next problem correct
         """
-        alpha = initialize_probability(parameters, pretest_score, num_pretest)
+        self.initialize_probability(parameters, pretest_score, num_pretest)
         for correctness in trajectory:
-            update_probability(alpha, parameters, correctness)
-        return get_probability_correct(alpha, parameters)
+            self.update_probability(parameters, correctness)
+        return self.get_current_probability_correct(parameters)
 
-def initialize_probability(params, pretest_score, num_pretest):
-    """
-    Initialize the forward probability vector according to the pre-test score
-    Uses the Bayes rule to compute the probability of knowing or not knowing the knowledge component
-    based on the initial probability parameter and the pre-test score
+    def initialize_probability(self, params, pretest_score, num_pretest):
+        """
+        Initialize the forward probability vector according to the pre-test score
+        Uses the Bayes rule to compute the probability of knowing or not knowing the knowledge component
+        based on the initial probability parameter and the pre-test score
 
-    :param params: dictionary of parameters containing pi, pt, pg, ps
-    :param pretest_score: number of problems the student got correct on the pre-test
-    :param num_pretest: total number of problems on the pre-test
-    :return: initialized forward probability vector
-    """
-    alpha = [0, 0]
-    alpha[0] = (1 - params['pi']) * math.pow(1 - params['pg'], num_pretest - pretest_score) * math.pow(params['pg'], num_pretest)
-    alpha[1] = params['pi'] * math.pow(params['ps'], num_pretest - pretest_score) * math.pow(1 - params['ps'], num_pretest)
-    norm = alpha[0] + alpha[1]
-    alpha[0] /= norm
-    alpha[1] /= norm
-    return alpha
+        :param params: dictionary of parameters containing pi, pt, pg, ps
+        :param pretest_score: number of problems the student got correct on the pre-test
+        :param num_pretest: total number of problems on the pre-test
+        """
+        self.alpha[0] = (1 - params['pi']) * math.pow(1 - params['pg'], num_pretest - pretest_score) * math.pow(params['pg'], num_pretest)
+        self.alpha[1] = params['pi'] * math.pow(params['ps'], num_pretest - pretest_score) * math.pow(1 - params['ps'], num_pretest)
+        norm = self.alpha[0] + self.alpha[1]
+        self.alpha[0] /= norm
+        self.alpha[1] /= norm
 
 
-def update_probability(alpha, params, is_correct):
-    """
-    Updates the forward probability vector at each time point according to whether
-    the student got the problem correct or not
+    def update_probability(self, params, is_correct):
+        """
+        Updates the forward probability vector at each time point according to whether
+        the student got the problem correct or not
 
-    :param alpha: forward probability vector compiled until this time point
-    :param params: dictionary of parameters containing pi, pt, pg, ps
-    :param is_correct: whether the student got the last problem correct or not (1-correct, 0-incorrect)
-    :return: nothing
-    """
-    alpha[0] *= params['pg'] * is_correct + (1 - params['pg']) * (1 - is_correct)
-    alpha[1] *= (1 - params['ps']) * is_correct + params['ps'] * (1 - is_correct)
-    new_alpha = [alpha[0] * (1 - params['pt']), alpha[0] * params['pt'] + alpha[1]]
-    alpha[0] = new_alpha[0]
-    alpha[1] = new_alpha[1]
+        :param self.alpha: forward probability vector compiled until this time point
+        :param params: dictionary of parameters containing pi, pt, pg, ps
+        :param is_correct: whether the student got the last problem correct or not (1-correct, 0-incorrect)
+        """
+        self.alpha[0] *= params['pg'] * is_correct + (1 - params['pg']) * (1 - is_correct)
+        self.alpha[1] *= (1 - params['ps']) * is_correct + params['ps'] * (1 - is_correct)
+        new_self.alpha = [self.alpha[0] * (1 - params['pt']), self.alpha[0] * params['pt'] + self.alpha[1]]
+        self.alpha[0] = new_self.alpha[0]
+        self.alpha[1] = new_self.alpha[1]
 
 
-def get_probability_correct(alpha, params):
-    """
-    Computes the probability of getting the next problem correct
+    def get_current_probability_correct(self, params):
+        """
+        Computes the probability of getting the next problem correct
 
-    :param alpha: forward probability vector compiled until this time point
-    :param params: dictionary of parameters containing pi, pt, pg, ps
-    :return: probability of getting the next problem correct
-    """
-    return (alpha[0] * params['pg'] + alpha[1] * (1 - params['ps'])) / (alpha[0] + alpha[1])
+        :param self.alpha: forward probability vector compiled until this time point
+        :param params: dictionary of parameters containing pi, pt, pg, ps
+        :return: probability of getting the next problem correct
+        """
+        return (self.alpha[0] * params['pg'] + self.alpha[1] * (1 - params['ps'])) / (self.alpha[0] + self.alpha[1])

@@ -9,6 +9,8 @@ class PFM(ModelInterface):
     and the number of questions the student got wrong until now
     """
 
+    counts = [0, 0] # Number of problems the student got incorrect and correct respectively
+
     def get_probability_correct(self, pretest_score, num_pretest, trajectory, parameters):
         """
         Get the probability of getting the next problem correct according to the student model
@@ -20,18 +22,19 @@ class PFM(ModelInterface):
         :param parameters: dictionary of parameters defining the student model
         :return: the probability of getting the next problem correct
         """
-        counts = [num_pretest - pretest_score, pretest_score]
+        self.counts[0] = num_pretest - pretest_score
+        self.counts[1] = pretest_score
         for correctness in trajectory:
-            counts[correctness] += 1
-        return get_probability(counts, parameters)
+            self.counts[correctness] += 1
+        return self.get_current_probability_correct(parameters)
 
 
-def get_probability(counts, params):
-    """
-    Computes the probability of getting the next problem correct
+    def get_current_probability_correct(self, params):
+        """
+        Computes the probability of getting the next problem correct
 
-    :param counts: number of problems the student got incorrect and correct
-    :param params: dictionary of parameters containing pi, pt, pg, ps
-    :return: probability of getting the next problem correct
-    """
-    return 1.0 / (1 + math.exp(-(params['beta_intercept'] + params['beta_incorrect'] * counts[0] + params['beta_correct'] * counts[1])))
+        :param counts: number of problems the student got incorrect and correct
+        :param params: dictionary of parameters containing pi, pt, pg, ps
+        :return: probability of getting the next problem correct
+        """
+        return 1.0 / (1 + math.exp(-(params['beta_intercept'] + params['beta_incorrect'] * self.counts[0] + params['beta_correct'] * self.counts[1])))

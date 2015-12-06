@@ -9,10 +9,23 @@ class SelectInterface(object):
     model_interface = None # Student model
 
     def __init__(self, data_interface, model_interface):
+        """
+        Constructor for the select interface
+
+        :param data_interface: data module storing state information about the user and the course
+        :param model_interface: model interface that computes the probability of getting the next problem correct
+        """
         self.data_interface = data_interface
         self.model_interface = model_interface
 
     def choose_next_problem(self, course_id, user_id):
+        """
+        Choose the next problem to give to the user
+
+        :param course_id
+        :param user_id
+        :return: the next problem to give to the user
+        """
         raise NotImplementedError( "Data module must implement this" )
 
 

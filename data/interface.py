@@ -60,7 +60,7 @@ class DataInterface(object):
     def post_load(self, course_id, problem_name, user_id, unix_seconds):
         raise NotImplementedError( "Data module must implement this" )
 
-    def set_next_problem(self, course_id, user_id, problem_name):
+    def set_next_problem(self, course_id, user_id, problem_dict):
         raise NotImplementedError( "Data module must implement this" )
 
     def advance_problem(self, course_id, user_id):

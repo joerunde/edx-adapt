@@ -2,10 +2,13 @@
 as users take the course.
 """
 
-import time, threading
+import threading
+import time
+
 from flask_restful import Resource, abort, reqparse
-from ...data.interface import DataInterface, DataException
-#from ...select.interface import SelectInterface
+
+from edx_adapt.data import DataException
+from edx_adapt.select.interface import SelectException
 
 """ Handle request for user's current and next problem """
 class UserProblems(Resource):
@@ -14,13 +17,19 @@ class UserProblems(Resource):
         """@type repo: DataInterface"""
 
     def get(self, course_id, user_id):
+        nex = {}
+        cur = {}
         try:
-            next = self.repo.get_next_problem(course_id, user_id)
+            nex = self.repo.get_next_problem(course_id, user_id)
             cur = self.repo.get_current_problem(course_id, user_id)
         except DataException as e:
-            abort(404, message = e.message)
+            abort(404, message=e.message)
 
-        return {"next": next, "current": cur}
+        okay = True
+        if 'error' in nex:
+            okay = False
+
+        return {"next": nex, "current": cur, "okay": okay}
 
 
 """ Argument parser for posting a user response """
@@ -42,13 +51,29 @@ selector_lock = threading.Lock()
 """ Run the problem selection sequence (in separate thread) """
 def run_selector(course_id, user_id, selector, repo):
     with selector_lock:
-        #"""@type selector: SelectInterface"""
+        """@type selector: SelectInterface"""
         """@type repo: DataInterface"""
-        next = repo.get_next_problem(course_id, user_id)
+        nex = None
+        try:
+            nex = repo.get_next_problem(course_id, user_id)
+        except DataException as e:
+            # exception here probably means the user/course combo doesn't exist. Screw it, quit
+            return
 
-        #only run if no next problem has been selected yet
-        if next == None:
-            selector.choose_next_problem(course_id, user_id)
+        # only run if no next problem has been selected yet, or there was an error previously
+        if nex is None or 'error' in nex:
+            try:
+                prob = selector.choose_next_problem(course_id, user_id)
+                repo.set_next_problem(prob)
+            except SelectException as e:
+                # assume that the user/course exists. Set an error...
+                repo.set_next_problem(course_id, user_id, {'problem_name': '', 'tutor_url': '',
+                                                           'error': e.message})
+                pass
+            except DataException as e:
+                #TODO: after deciding if set_next_problem could throw an exception here
+                pass
+
 
 """ Post a user's response to their current problem """
 class UserInteraction(Resource):
@@ -58,12 +83,12 @@ class UserInteraction(Resource):
 
     def post(self, course_id, user_id):
         args = result_parser.parse_args()
-        if args['unix_seconds'] == None:
+        if args['unix_seconds'] is None:
             args['unix_seconds'] = int(time.time())
 
         try:
             # If this is a response to the "next" problem, advance to it first before storing
-            if args['problem'] == self.repo.get_next_problem(course_id, user_id):
+            if args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
                 self.repo.advance_problem(course_id, user_id)
 
             self.repo.post_interaction(course_id, args['problem'], user_id, args['correct'],
@@ -93,12 +118,12 @@ class UserPageLoad(Resource):
 
     def post(self, course_id, user_id):
         args = load_parser.parse_args()
-        if args['unix_seconds'] == None:
+        if args['unix_seconds'] is None:
             args['unix_seconds'] = int(time.time())
 
         try:
             self.repo.post_load(course_id, args['problem'], user_id, args['unix_seconds'])
-            if args['problem'] == self.repo.get_next_problem(course_id, user_id):
+            if args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
                 self.repo.advance_problem(course_id, user_id)
         except DataException as e:
             abort(500, message=e.message)

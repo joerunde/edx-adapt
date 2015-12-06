@@ -1,6 +1,3 @@
-from data.interface import DataInterface
-from model.interface import ModelInterface
-
 class SelectInterface(object):
     """ This is the interface for the adaptive problem
     selection logic. It interacts with the inputted data interface and

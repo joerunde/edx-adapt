@@ -4,7 +4,7 @@ For example, CRUDding courses, users, problems, skills...
 
 from flask_restful import Resource, abort, reqparse
 
-from edx_adapt.data import DataException
+from edx_adapt.data.interface import DataException
 
 course_parser = reqparse.RequestParser()
 course_parser.add_argument('course_id', type=str, required=True, help="Please supply a course ID")

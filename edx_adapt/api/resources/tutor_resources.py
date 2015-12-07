@@ -7,7 +7,7 @@ import time
 
 from flask_restful import Resource, abort, reqparse
 
-from edx_adapt.data import DataException
+from edx_adapt.data.interface import DataException
 from edx_adapt.select.interface import SelectException
 
 """ Handle request for user's current and next problem """

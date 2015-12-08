@@ -76,10 +76,22 @@ class DataInterface(object):
     def get_remaining_problems(self, course_id, skill_name, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
-    def get_all_remaining_posttest_problems(selfself, course_id, user_id):
+    def get_all_remaining_posttest_problems(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
-    def get_remaining_posttest_problems(selfself, course_id, skill_name, user_id):
+    def get_remaining_posttest_problems(self, course_id, skill_name, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_all_remaining_pretest_problems(self, course_id, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_remaining_pretest_problems(self, course_id, skill_name, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_whole_trajectory(self, course_id, user_id):
+        raise NotImplementedError( "Data module must implement this" )
+
+    def get_skill_trajectory(self, course_id, skill_name, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
     def get_all_interactions(self, course_id, user_id):
@@ -97,9 +109,8 @@ class DataInterface(object):
     def get_raw_user_data(self, course_id, user_id):
         raise NotImplementedError( "Data module must implement this" )
 
-    def get_all_raw_data(self, course_id):
+    def get_raw_user_skill_data(self, course_id, skill_name, user_id):
         raise NotImplementedError( "Data module must implement this" )
-
 
 
     """ Methods to group users by experiment, e.g. for AB policy testing """

@@ -14,6 +14,30 @@ class SkillSeparateRandomSelector(SelectInterface):
     the candidate list with the same probability.
     """
 
+    parameter_access_mode_list = [] # List of the granularity of parameters
+                                    # (If per course, "course"; if per skill, "skill"; if per user, "user")
+    valid_mode_list = ["course", "user", "skill"]
+
+    def __init__(self, data_interface, model_interface, parameter_access_mode):
+        """
+        Constructor with the running mode specified, where running mode specifies
+        whether the parameters are specified per course, per user, per skill, etc.
+
+        :param data_interface: data module storing state information about the user and the course
+        :param model_interface: model interface that computes the probability of getting the next problem correct
+        :param parameter_access_mode: Mode that defines the granularity of the parameters
+                                      If per course, "course"; if per skill, "skill"; if per user, "user"
+                                      These can be combined. ex) "course skill" - per course and skill
+                                      The order must match the order of keys used in data module's set method
+                                      For instance, if "course skill", key should be "course_id skill_id"
+        """
+        super(SkillSeparateRandomSelector, self).__init__(data_interface, model_interface)
+        self.parameter_access_mode_list = parameter_access_mode.split(" ")
+        for mode in self.parameter_access_mode_list:
+            if mode not in self.valid_mode_list:
+                raise SelectException("Parameter access node is invalid")
+
+
     def choose_next_problem(self, course_id, user_id):
         """
         Choose the next problem to give to the user
@@ -25,7 +49,8 @@ class SkillSeparateRandomSelector(SelectInterface):
         try:
             candidate_problem_list = [] # List of problems to choose from
             for skill_name in self.data_interface.get_skills(course_id): # For each skill
-                skill_parameter = self.data_interface.get(skill_name) # Parameter must include "threshold"
+                # Gets the parameters corresponding to the course, user, skill - parameter set must include "threshold"
+                skill_parameter = self.data_interface.get(self.get_key(course_id, user_id, skill_name))
                 prob_correct = self.model_interface.get_probability_correct(
                     self.data_interface.get_num_pretest(course_id, skill_name), # number of pre-test problems on the skill
                     self.data_interface.get_interactions(course_id, skill_name, user_id), # trajectory of correctness
@@ -44,3 +69,36 @@ class SkillSeparateRandomSelector(SelectInterface):
             raise SelectException("DataException: " + e.message)
         except ModelException as e:
             raise SelectException("ModelException: " + e.message)
+        except SelectException as e:
+            raise e
+
+
+    def choose_first_problem(self, course_id, user_id):
+        """
+        Choose the first problem to give to the user
+
+        :param course_id
+        :param user_id
+        :return: the first problem to give to the user
+        """
+        return self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)[0]
+
+
+    def get_key(self, course_id, user_id, skill_name):
+        """
+        Gets the valid key to access the parameters for the specified course, user, skill
+        based on the mode specified in the constructor
+
+        :param course_id
+        :param user_id
+        :param skill_id
+        :return: key to access the parameters in the data module
+        """
+        mode_id_map = {"course": course_id, "user": user_id, "skill": skill_name}
+        key = ""
+        for mode in self.parameter_access_mode_list:
+            if mode in mode_id_map:
+                key += str(mode_id_map[mode]) + " "
+            else:
+                raise SelectException("Parameter access mode is invalid")
+        return key.strip()

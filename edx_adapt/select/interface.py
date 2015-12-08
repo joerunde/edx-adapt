@@ -29,5 +29,16 @@ class SelectInterface(object):
         raise NotImplementedError( "Data module must implement this" )
 
 
+    def choose_first_problem(self, course_id, user_id):
+        """
+        Choose the first problem to give to the user
+
+        :param course_id
+        :param user_id
+        :return: the first problem to give to the user
+        """
+        raise NotImplementedError( "Data module must implement this" )
+
+
 class SelectException(Exception):
     pass

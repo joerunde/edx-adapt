@@ -1,3 +1,4 @@
+import flask
 from flask import Flask
 from flask.ext.cors import CORS
 from flask_restful import Api
@@ -5,7 +6,7 @@ from flask_restful import Api
 # import API resources
 import resources.course_resources as CR
 # import data module
-import edx_adapt.data.mockRepository as mock
+import edx_adapt.data.tinydbRepository as repo
 
 app = Flask(__name__)
 CORS(app)
@@ -14,20 +15,25 @@ api = Api(app)
 # TODO: load from settings
 base = '/api/v1'
 
-data = mock.MockRepository()
+data = repo.TinydbRepository('/tmp/2.json')
 
 api.add_resource(CR.Courses, base + '/course',
                  resource_class_kwargs={'data': data})
-api.add_resource(CR.Skills, base + '/course/<str:course_id>/skill',
+api.add_resource(CR.Skills, base + '/course/<course_id>/skill',
                  resource_class_kwargs={'data': data})
-api.add_resource(CR.Users, base + '/course/<str:course_id>/user',
+api.add_resource(CR.Users, base + '/course/<course_id>/user',
                  resource_class_kwargs={'data': data})
-api.add_resource(CR.Problems, base + '/course/<str:course_id>', base + '/course/<str:course_id>/skill/<str:skill_name>',
+api.add_resource(CR.Problems, base + '/course/<course_id>', base + '/course/<course_id>/skill/<skill_name>',
                  resource_class_kwargs={'data': data})
+
+
+@app.errorhandler(404)  # Return JSON with 404 instead of html
+def page_not_found(e):
+    return flask.jsonify(error=404, text=str(e)), 404
 
 
 def run():
-    app.run()
+    app.run(debug=True)
 
 if __name__ == '__main__':
     app.run()

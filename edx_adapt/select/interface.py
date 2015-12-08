@@ -40,5 +40,17 @@ class SelectInterface(object):
         raise NotImplementedError( "Data module must implement this" )
 
 
+    def set_parameter(self, parameter, course_id = None, user_id = None, skill_name = None):
+        """
+        Set the parameter for the specified course, user, skill (all optional)
+
+        :param parameter: dictionary containing the set of parameters
+        :param course_id
+        :param user_id
+        :param skill_name
+        """
+        raise NotImplementedError( "Data module must implement this" )
+
+
 class SelectException(Exception):
     pass

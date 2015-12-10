@@ -146,15 +146,9 @@ class TinydbRepository(interface.DataInterface):
     def set_next_problem(self, course_id, user_id, problem_dict):
         self.assert_table(course_id)
         ctable = self.db.table(course_id)
-        # assert that this problem exists in this course:
-        problems = self.db_get(ctable, 'problems')
-        if problem_dict not in problems:
-            # still try to look up the problem
-            if 'problem_name' not in problem_dict:
-                raise interface.DataException("Next problem not in database, "
-                                              "and does not contain problem_name: {}".format(str(problem_dict)))
-            problem_dict = self._get_problem(ctable, problem_dict['problem_name'])
-            # above line will raise exception if it can't be found
+        # if no error, assert that this problem exists in this course:
+        if 'error' not in problem_dict:
+            problem_dict = self.get_and_assert_problem_exists(ctable, problem_dict)
 
         curnext = self.db_get(ctable, self.get_user_problem_key(user_id))
         curnext['next'] = problem_dict
@@ -167,7 +161,9 @@ class TinydbRepository(interface.DataInterface):
         self.assert_table(course_id)
         ctable = self.db.table(course_id)
         curnext = self.db_get(ctable, self.get_user_problem_key(user_id))
-        curnext['current'] = curnext['next']
+        # assert that next problem is valid (it could be an error message)
+        next_problem = self.get_and_assert_problem_exists(ctable, curnext['next'])
+        curnext['current'] = next_problem
         curnext['next'] = None
         self.db_set(ctable, self.get_user_problem_key(user_id), curnext)
 
@@ -338,3 +334,14 @@ class TinydbRepository(interface.DataInterface):
         done = self.get_probs_done(ctable, user_id)
         remaining = [x for x in all if x not in done]
         return remaining
+
+    def get_and_assert_problem_exists(self, ctable, problem_dict):
+        problems = self.db_get(ctable, 'problems')
+        if problem_dict not in problems:
+            # still try to look up the problem
+            if 'problem_name' not in problem_dict:
+                raise interface.DataException("Next problem not in database, "
+                                              "and does not contain problem_name: {}".format(str(problem_dict)))
+            problem_dict = self._get_problem(ctable, problem_dict['problem_name'])
+            # above line will raise exception if it can't be found
+        return problem_dict

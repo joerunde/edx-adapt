@@ -67,8 +67,7 @@ def run_selector(course_id, user_id, selector, repo):
                 repo.set_next_problem(prob)
             except SelectException as e:
                 # assume that the user/course exists. Set an error...
-                repo.set_next_problem(course_id, user_id, {'problem_name': '', 'tutor_url': '',
-                                                           'error': e.message})
+                repo.set_next_problem(course_id, user_id, {'error': e.message})
                 pass
             except DataException as e:
                 #TODO: after deciding if set_next_problem could throw an exception here
@@ -88,6 +87,7 @@ class UserInteraction(Resource):
 
         try:
             # If this is a response to the "next" problem, advance to it first before storing
+            # (shouldn't happen if PageLoad messages are posted correctly, but we won't require that)
             if args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
                 self.repo.advance_problem(course_id, user_id)
 

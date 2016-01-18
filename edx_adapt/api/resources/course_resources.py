@@ -7,7 +7,7 @@ from flask_restful import Resource, abort, reqparse
 from edx_adapt.data.interface import DataException
 
 course_parser = reqparse.RequestParser()
-course_parser.add_argument('course_id', type=str, required=True, help="Please supply a course ID")
+course_parser.add_argument('course_id', type=str, required=True, location='json', help="Please supply a course ID")
 
 
 class Courses(Resource):
@@ -34,7 +34,8 @@ class Courses(Resource):
 
 
 skill_parser = reqparse.RequestParser()
-skill_parser.add_argument('skill_name', type=str, required=True, help="Please supply the name of a skill")
+skill_parser.add_argument('skill_name', type=str, required=True, location='json',
+                          help="Please supply the name of a skill")
 
 
 class Skills(Resource):
@@ -62,7 +63,7 @@ class Skills(Resource):
 
 
 user_parser = reqparse.RequestParser()
-user_parser.add_argument('user_id', type=str, required=True, help="Please supply a user ID")
+user_parser.add_argument('user_id', type=str, required=True, location='json', help="Please supply a user ID")
 
 
 class Users(Resource):
@@ -92,14 +93,15 @@ class Users(Resource):
 
 
 problem_parser = reqparse.RequestParser()
-problem_parser.add_argument('problem_name', type=str, required=True, help="Please supply a problem name")
-problem_parser.add_argument('tutor_url', type=str, required=True,
+problem_parser.add_argument('problem_name', type=str, required=True,  location='json',
+                            help="Please supply a problem name")
+problem_parser.add_argument('tutor_url', type=str, required=True, location='json',
                             help="Please supply a link to the problem's page in your tutor")
-problem_parser.add_argument('skills', type=list, required=True,
+problem_parser.add_argument('skills', type=list, required=True, location='json',
                             help="Please supply a list of skills that this problem teaches")
-problem_parser.add_argument('pretest', type=bool,
+problem_parser.add_argument('pretest', type=bool, location='json',
                             help="Set True if this is a pretest problem. Mutually exclusive with posttest")
-problem_parser.add_argument('posttest', type=bool,
+problem_parser.add_argument('posttest', type=bool, location='json',
                             help="Set True if this is a posttest problem. Mutually exclusive with pretest")
 
 class Problems(Resource):

@@ -34,13 +34,14 @@ class UserProblems(Resource):
 
 """ Argument parser for posting a user response """
 result_parser = reqparse.RequestParser()
-result_parser.add_argument('problem', type=str, required=True,
+result_parser.add_argument('problem', type=str, required=True, location='json',
                            help="Must supply the name of the problem which the user answered")
-result_parser.add_argument('correct', type=int, required=True,
+result_parser.add_argument('correct', type=int, required=True, location='json',
                            help="Must supply correctness, 0 for incorrect, 1 for correct")
-result_parser.add_argument('attempt', type=int, required=True,
+result_parser.add_argument('attempt', type=int, required=True, location='json',
                            help="Must supply the attempt number, starting from 1 for the first attempt")
-result_parser.add_argument('unix_seconds', type=int, help="Optionally supply timestamp in seconds since unix epoch")
+result_parser.add_argument('unix_seconds', type=int, location='json',
+                           help="Optionally supply timestamp in seconds since unix epoch")
 """result_parser.add_argument('done', type=bool, required=True,
                            help="Legacy support for multiple part problems. Supply false if"
                                 " the user must answer more parts, otherwise leave this true")"""
@@ -107,8 +108,9 @@ class UserInteraction(Resource):
         return {"success": True}, 200
 
 load_parser = reqparse.RequestParser()
-load_parser.add_argument('problem', required=True, help="Must supply the name of the problem loaded")
-load_parser.add_argument('unix_seconds', type=int, help="Optionally supply timestamp in seconds since unix epoch")
+load_parser.add_argument('problem', required=True, help="Must supply the name of the problem loaded", location='json')
+load_parser.add_argument('unix_seconds', type=int, help="Optionally supply timestamp in seconds since unix epoch",
+                         location='json')
 
 """ Post the time when a user loads a problem. Used to log time spent solving a problem """
 class UserPageLoad(Resource):

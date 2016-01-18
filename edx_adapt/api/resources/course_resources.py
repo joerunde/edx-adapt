@@ -28,6 +28,7 @@ class Courses(Resource):
         try:
             self.repo.post_course(args['course_id'])
         except DataException as e:
+            print str(e)
             abort(500, message=str(e))
 
         return {'success': True}, 200
@@ -47,6 +48,7 @@ class Skills(Resource):
         try:
             skills = self.repo.get_skills(course_id)
         except DataException as e:
+            print str(e)
             abort(500, message=str(e))
 
         return {'skills': skills}, 200

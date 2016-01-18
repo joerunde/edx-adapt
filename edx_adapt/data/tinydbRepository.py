@@ -71,7 +71,7 @@ class TinydbRepository(interface.DataInterface):
         courses = self.db.tables()
         courses.remove('_default')
         courses.remove(self.generic_table_name)
-        return courses
+        return list(courses)
 
     def get_skills(self, course_id):
         self.assert_table(course_id)

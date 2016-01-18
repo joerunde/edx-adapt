@@ -28,6 +28,7 @@ class Courses(Resource):
         try:
             self.repo.post_course(args['course_id'])
         except DataException as e:
+            print "course already exists...."
             abort(500, message=e.message)
 
         return {'success': True}, 200

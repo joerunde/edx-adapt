@@ -20,7 +20,7 @@ class Courses(Resource):
         try:
             courses = self.repo.get_course_ids()
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
         return {'course_ids': courses}, 200
 
     def post(self):
@@ -28,7 +28,7 @@ class Courses(Resource):
         try:
             self.repo.post_course(args['course_id'])
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
 
         return {'success': True}, 200
 
@@ -47,7 +47,7 @@ class Skills(Resource):
         try:
             skills = self.repo.get_skills(course_id)
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
 
         return {'skills': skills}, 200
 
@@ -56,7 +56,7 @@ class Skills(Resource):
         try:
             self.repo.post_skill(course_id, args['skill_name'])
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
 
         return {'success': True}, 200
 
@@ -77,7 +77,7 @@ class Users(Resource):
             finished_users = self.repo.get_finished_users(course_id)
             progress_users = self.repo.get_in_progress_users(course_id)
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
 
         return {'users': {'finished': finished_users, 'in_progress': progress_users}}, 200
 
@@ -86,7 +86,7 @@ class Users(Resource):
         try:
             self.repo.enroll_user(course_id, args['user_id'])
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
 
         return {'success': True}, 200
 
@@ -112,7 +112,7 @@ class Problems(Resource):
         try:
             problems = self.repo.get_problems(course_id, skill_name)
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
 
         return {'problems': problems}, 200
 
@@ -126,6 +126,6 @@ class Problems(Resource):
             else:
                 self.repo.post_problem(course_id, args['skills'], args['problem_name'], args['tutor_url'])
         except DataException as e:
-            abort(500, message=e.message)
+            abort(500, message=str(e))
 
         return {'success': True}, 200

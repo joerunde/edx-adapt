@@ -5,6 +5,7 @@ from flask_restful import Api
 
 # import API resources
 import resources.course_resources as CR
+import resources.tutor_resources as TR
 # import data module
 import edx_adapt.data.tinydbRepository as repo
 
@@ -24,6 +25,13 @@ api.add_resource(CR.Skills, base + '/course/<course_id>/skill',
 api.add_resource(CR.Users, base + '/course/<course_id>/user',
                  resource_class_kwargs={'data': data})
 api.add_resource(CR.Problems, base + '/course/<course_id>', base + '/course/<course_id>/skill/<skill_name>',
+                 resource_class_kwargs={'data': data})
+
+api.add_resource(TR.UserInteraction, base + '/course/<course_id>/user/<user_id>/interaction',
+                 resource_class_kwargs={'data': data})
+api.add_resource(TR.UserProblems, base + '/course/<course_id>/user/<user_id>',
+                 resource_class_kwargs={'data': data})
+api.add_resource(TR.UserPageLoad, base + '/course/<course_id>/user/<user_id>/pageload',
                  resource_class_kwargs={'data': data})
 
 

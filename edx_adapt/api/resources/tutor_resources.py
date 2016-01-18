@@ -41,9 +41,9 @@ result_parser.add_argument('correct', type=int, required=True,
 result_parser.add_argument('attempt', type=int, required=True,
                            help="Must supply the attempt number, starting from 1 for the first attempt")
 result_parser.add_argument('unix_seconds', type=int, help="Optionally supply timestamp in seconds since unix epoch")
-result_parser.add_argument('done', type=bool, required=True,
+"""result_parser.add_argument('done', type=bool, required=True,
                            help="Legacy support for multiple part problems. Supply false if"
-                                " the user must answer more parts, otherwise leave this true")
+                                " the user must answer more parts, otherwise leave this true")"""
 
 """ Global lock for calling choose_next_problem """
 selector_lock = threading.Lock()
@@ -94,13 +94,13 @@ class UserInteraction(Resource):
             self.repo.post_interaction(course_id, args['problem'], user_id, args['correct'],
                                        args['attempt'], args['unix_seconds'])
 
-            # if the user needs a new problem, start choosing one
-            if args['done']:
-                try:
-                    threading.Thread(target=run_selector, args=(course_id, user_id))
-                except Exception as e:
-                    abort(500, message="Interaction successfully stored, but an error occurred starting "
-                                       "a problem selection thread: " + e.message)
+            # the user needs a new problem, start choosing one
+            try:
+                threading.Thread(target=run_selector, args=(course_id, user_id))
+            except Exception as e:
+                abort(500, message="Interaction successfully stored, but an error occurred starting "
+                                   "a problem selection thread: " + e.message)
+
         except DataException as e:
             abort(500, message=e.message)
 

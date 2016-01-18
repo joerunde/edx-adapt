@@ -29,8 +29,10 @@ class Courses(Resource):
             self.repo.post_course(args['course_id'])
         except DataException as e:
             print str(e)
+            print "okay, we caught this exception..."
             self.error = str(e)
         if self.error:
+            print "ait, now we're gonna try to abort: " + self.error
             abort(500, message=self.error)
 
         return {'success': True}, 200

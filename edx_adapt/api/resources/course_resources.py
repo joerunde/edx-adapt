@@ -25,11 +25,13 @@ class Courses(Resource):
 
     def post(self):
         args = course_parser.parse_args()
-        #try:
-        self.repo.post_course(args['course_id'])
-        #except DataException as e:
-        #    print str(e)
-        #    abort(500, message=str(e))
+        try:
+            self.repo.post_course(args['course_id'])
+        except DataException as e:
+            print str(e)
+            self.error = str(e)
+        if self.error:
+            abort(500, message=self.error)
 
         return {'success': True}, 200
 

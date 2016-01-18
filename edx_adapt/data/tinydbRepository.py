@@ -285,7 +285,7 @@ class TinydbRepository(interface.DataInterface):
         result = table.search(element.key == key)
         if len(result) == 0:
             raise interface.DataException("Key {} not found in table".format(key))
-        return result[0]
+        return result[0]['val']
 
     def db_append(self, table, listkey, val):
         """@type table: TinyDB"""

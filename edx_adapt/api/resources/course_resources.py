@@ -28,12 +28,7 @@ class Courses(Resource):
         try:
             self.repo.post_course(args['course_id'])
         except DataException as e:
-            print str(e)
-            print "okay, we caught this exception..."
-            self.error = str(e)
-        if self.error:
-            print "ait, now we're gonna try to abort: " + self.error
-            abort(500, message=self.error)
+            abort(500, message=str(e))
 
         return {'success': True}, 200
 
@@ -52,7 +47,6 @@ class Skills(Resource):
         try:
             skills = self.repo.get_skills(course_id)
         except DataException as e:
-            print str(e)
             abort(500, message=str(e))
 
         return {'skills': skills}, 200
@@ -124,6 +118,8 @@ class Problems(Resource):
 
     def post(self, course_id):
         args = problem_parser.parse_args()
+        print "Post problem args:"
+        print args
         try:
             if args['pretest']:
                 self.repo.post_pretest_problem(course_id, args['skills'], args['problem_name'], args['tutor_url'])

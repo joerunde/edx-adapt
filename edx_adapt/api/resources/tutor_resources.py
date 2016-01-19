@@ -65,7 +65,7 @@ def run_selector(course_id, user_id, selector, repo):
         if nex is None or 'error' in nex:
             try:
                 prob = selector.choose_next_problem(course_id, user_id)
-                repo.set_next_problem(prob)
+                repo.set_next_problem(course_id, user_id, prob)
             except SelectException as e:
                 # assume that the user/course exists. Set an error...
                 repo.set_next_problem(course_id, user_id, {'error': e.message})
@@ -79,7 +79,9 @@ def run_selector(course_id, user_id, selector, repo):
 class UserInteraction(Resource):
     def __init__(self, **kwargs):
         self.repo = kwargs['data']
+        self.selector = kwargs['selector']
         """@type repo: DataInterface"""
+        """@type selector: SelectInterface"""
 
     def post(self, course_id, user_id):
         args = result_parser.parse_args()
@@ -92,12 +94,15 @@ class UserInteraction(Resource):
             if args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
                 self.repo.advance_problem(course_id, user_id)
 
+            #TODO: guard against answering other problems...?
+            #possibly outside the scope of this software
+
             self.repo.post_interaction(course_id, args['problem'], user_id, args['correct'],
                                        args['attempt'], args['unix_seconds'])
 
             # the user needs a new problem, start choosing one
             try:
-                threading.Thread(target=run_selector, args=(course_id, user_id))
+                threading.Thread(target=run_selector, args=(course_id, user_id, self.selector, self.repo))
             except Exception as e:
                 abort(500, message="Interaction successfully stored, but an error occurred starting "
                                    "a problem selection thread: " + e.message)

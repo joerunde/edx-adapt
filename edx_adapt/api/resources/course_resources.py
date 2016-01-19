@@ -5,6 +5,7 @@ For example, CRUDding courses, users, problems, skills...
 from flask_restful import Resource, abort, reqparse
 
 from edx_adapt.data.interface import DataException
+from edx_adapt.select.interface import SelectException
 
 course_parser = reqparse.RequestParser()
 course_parser.add_argument('course_id', type=str, required=True, location='json', help="Please supply a course ID")
@@ -37,7 +38,6 @@ skill_parser = reqparse.RequestParser()
 skill_parser.add_argument('skill_name', type=str, required=True, location='json',
                           help="Please supply the name of a skill")
 
-
 class Skills(Resource):
     def __init__(self, **kwargs):
         self.repo = kwargs['data']
@@ -48,7 +48,7 @@ class Skills(Resource):
         try:
             skills = self.repo.get_skills(course_id)
         except DataException as e:
-            abort(500, message=str(e))
+            abort(404, message=str(e))
 
         return {'skills': skills}, 200
 
@@ -69,7 +69,9 @@ user_parser.add_argument('user_id', type=str, required=True, location='json', he
 class Users(Resource):
     def __init__(self, **kwargs):
         self.repo = kwargs['data']
+        self.selector = kwargs['selector']
         """@type repo: DataInterface"""
+        """@type selector: SelectInterface"""
 
     def get(self, course_id):
         finished_users = []
@@ -78,7 +80,7 @@ class Users(Resource):
             finished_users = self.repo.get_finished_users(course_id)
             progress_users = self.repo.get_in_progress_users(course_id)
         except DataException as e:
-            abort(500, message=str(e))
+            abort(404, message=str(e))
 
         return {'users': {'finished': finished_users, 'in_progress': progress_users}}, 200
 
@@ -86,9 +88,12 @@ class Users(Resource):
         args = user_parser.parse_args()
         try:
             self.repo.enroll_user(course_id, args['user_id'])
+            first_prob = self.selector.choose_first_problem(course_id, args['user_id'])
+            self.repo.set_next_problem(course_id, args['user_id'], first_prob)
         except DataException as e:
             abort(500, message=str(e))
-
+        except SelectException as e:
+            abort(500, message=str(e))
         return {'success': True}, 200
 
 

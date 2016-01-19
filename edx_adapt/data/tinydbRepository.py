@@ -128,8 +128,6 @@ class TinydbRepository(interface.DataInterface):
                 prog.remove(user_id)
                 self.db_set(ctable, 'users_in_progress', prog)
 
-
-
     def post_load(self, course_id, problem_name, user_id, unix_seconds):
         # TODO: maybe only record one load per problem. Think about users exiting and restarting...?
         self.assert_table(course_id)

@@ -34,10 +34,10 @@ class SkillSeparateRandomSelector(SelectInterface):
                                       So if the string is empty, there is one parameter set per course
         """
         super(SkillSeparateRandomSelector, self).__init__(data_interface, model_interface)
-        self.parameter_access_mode_list.append(parameter_access_mode.split(" "))
+        self.parameter_access_mode_list.append(parameter_access_mode.split())
         for mode in self.parameter_access_mode_list:
             if mode not in self.valid_mode_list:
-                raise SelectException("Parameter access node is invalid")
+                raise SelectException("Parameter access mode is invalid")
 
 
     def choose_next_problem(self, course_id, user_id):

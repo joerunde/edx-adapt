@@ -109,7 +109,7 @@ class Problems(Resource):
         self.repo = kwargs['data']
         """@type repo: DataInterface"""
 
-    def get(self, course_id, skill_name):
+    def get(self, course_id, skill_name=None):
         problems = []
         try:
             problems = self.repo.get_problems(course_id, skill_name)

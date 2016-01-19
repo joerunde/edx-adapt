@@ -43,7 +43,7 @@ class TinydbRepository(interface.DataInterface):
             if skill not in skills:
                 raise interface.DataException("No such skill: {}".format(skill))
         self.db_append(ctable, 'problems', {'problem_name': problem_name, 'tutor_url': tutor_url,
-                                            'pretest': b_pretest, 'posttest': b_posttest})
+                                            'pretest': b_pretest, 'posttest': b_posttest, 'skills':skill_names})
 
     def post_problem(self, course_id, skill_names, problem_name, tutor_url):
         self._add_problem(course_id, skill_names, problem_name, tutor_url, False, False)
@@ -74,11 +74,15 @@ class TinydbRepository(interface.DataInterface):
         ctable = self.db.table(course_id)
         return self.db_get(ctable, 'skills')
 
-    def get_problems(self, course_id, skill_name):
+    def get_problems(self, course_id, skill_name=None):
         """ Get all problems related to this course-skill pair:, pretest, normal, and posttest """
         self.assert_table(course_id)
         ctable = self.db.table(course_id)
-        return self.db_get(ctable, 'problems')
+        problems = self.db_get(ctable, 'problems')
+        if skill_name == None:
+            return problems
+        else:
+            return [x for x in problems if skill_name in x['skills']]
 
     def get_num_pretest(self, course_id, skill_name):
         self.assert_table(course_id)

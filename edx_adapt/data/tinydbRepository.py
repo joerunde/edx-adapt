@@ -290,8 +290,6 @@ class TinydbRepository(interface.DataInterface):
     def db_append(self, table, listkey, val):
         """@type table: TinyDB"""
         l = self.db_get(table, listkey)
-        print "db_append, found:"
-        print l
         if val in l:
             raise interface.DataException("Value: {0} already exists in list: {1}".format(val, listkey))
         l.append(val)

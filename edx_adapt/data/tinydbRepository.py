@@ -35,10 +35,6 @@ class TinydbRepository(interface.DataInterface):
         ctable = self.db.table(course_id)
         self.db_append(ctable, 'skills', skill_name)
 
-        s2p = self.db_get(ctable, 's2p')
-        s2p[skill_name] = []
-        self.db_set(ctable, 's2p', s2p)
-
     def _add_problem(self, course_id, skill_names, problem_name, tutor_url, b_pretest, b_posttest):
         self.assert_table(course_id)
         ctable = self.db.table(course_id)

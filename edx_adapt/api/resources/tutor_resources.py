@@ -103,7 +103,8 @@ class UserInteraction(Resource):
 
             # the user needs a new problem, start choosing one
             try:
-                threading.Thread(target=run_selector, args=(course_id, user_id, self.selector, self.repo))
+                t = threading.Thread(target=run_selector, args=(course_id, user_id, self.selector, self.repo))
+                t.start()
             except Exception as e:
                 abort(500, message="Interaction successfully stored, but an error occurred starting "
                                    "a problem selection thread: " + e.message)

@@ -26,7 +26,7 @@ class UserProblems(Resource):
             abort(404, message=e.message)
 
         okay = True
-        if nex and 'error' in nex:
+        if not nex or 'error' in nex:
             okay = False
 
         return {"next": nex, "current": cur, "okay": okay}

@@ -131,7 +131,8 @@ class UserPageLoad(Resource):
 
         try:
             self.repo.post_load(course_id, args['problem'], user_id, args['unix_seconds'])
-            if args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
+            if self.repo.get_next_problem(course_id, user_id) and \
+                            args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
                 self.repo.advance_problem(course_id, user_id)
         except DataException as e:
             abort(500, message=e.message)

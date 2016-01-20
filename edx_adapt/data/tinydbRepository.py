@@ -13,10 +13,7 @@ class TinydbRepository(interface.DataInterface):
         # Create or load backing store
         self.db = TinyDB(db_path)
         self.generic_table_name = "Generic"
-
-        # Create generic key/val store table if it doesn't exist
-        if self.generic_table_name not in self.db.tables():
-            self.generic = self.db.table("Generic")
+        self.generic = self.db.table(self.generic_table_name)
 
         """ Course setup methods """
     def post_course(self, course_id):

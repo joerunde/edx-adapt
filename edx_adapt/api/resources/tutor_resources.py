@@ -26,7 +26,7 @@ class UserProblems(Resource):
             abort(404, message=e.message)
 
         okay = True
-        if 'error' in nex:
+        if nex and 'error' in nex:
             okay = False
 
         return {"next": nex, "current": cur, "okay": okay}
@@ -91,7 +91,8 @@ class UserInteraction(Resource):
         try:
             # If this is a response to the "next" problem, advance to it first before storing
             # (shouldn't happen if PageLoad messages are posted correctly, but we won't require that)
-            if args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
+            if self.repo.get_next_problem(course_id, user_id) and \
+                            args['problem'] == self.repo.get_next_problem(course_id, user_id)['problem_name']:
                 self.repo.advance_problem(course_id, user_id)
 
             #TODO: guard against answering other problems...?

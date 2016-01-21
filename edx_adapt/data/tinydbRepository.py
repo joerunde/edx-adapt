@@ -311,7 +311,10 @@ class TinydbRepository(interface.DataInterface):
         if val in l:
             raise interface.DataException("Value: {0} already exists in list: {1}".format(val, listkey))
         l.append(val)
-        self.db_set(table, listkey, l)
+        #self.db_set(table, listkey, l)
+        element = Query()
+        with self.write_lock:
+            table.update({'val':l}, element.key == listkey)
 
     def assert_no_table(self, name):
         table = self.db.table(name)

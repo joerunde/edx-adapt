@@ -13,13 +13,13 @@ class TinydbRepository(interface.DataInterface):
     #create single database
     #TODO: yeah...
     db = TinyDB('/tmp/2.json')
+    write_lock = threading.Lock()
 
     def __init__(self, db_path):
         super(TinydbRepository, self).__init__()
 
         # Create or load backing store
         self.db = TinydbRepository.db
-        self.write_lock = threading.Lock()
         self.generic_table_name = "Generic"
         self.generic = self.db.table(self.generic_table_name)
         self.db_set(self.generic, "MAGIC JOHNSON", "This is the generic store table")
@@ -287,7 +287,7 @@ class TinydbRepository(interface.DataInterface):
 
     def db_set(self, table, key, val):
         """@type table: TinyDB"""
-        with self.write_lock:
+        with TinydbRepository.write_lock:
             #sanity check, is this jsonable and back?
             s = json.dumps(val)
             o = json.loads(s)
@@ -302,7 +302,7 @@ class TinydbRepository(interface.DataInterface):
 
     def db_get(self, table, key):
         """@type table: TinyDB"""
-        with self.write_lock:
+        with TinydbRepository.write_lock:
             element = Query()
             result = table.search(element.key == key)
             if len(result) == 0:
@@ -317,7 +317,7 @@ class TinydbRepository(interface.DataInterface):
         l.append(val)
         #self.db_set(table, listkey, l)
         element = Query()
-        with self.write_lock:
+        with TinydbRepository.write_lock:
             table.update({'val':l}, element.key == listkey)
 
     def assert_no_table(self, name):

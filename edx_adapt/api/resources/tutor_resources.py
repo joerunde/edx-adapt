@@ -74,11 +74,11 @@ def run_selector(course_id, user_id, selector, repo):
                 # assume that the user/course exists. Set an error...
                 print("--------------------\tSELECTION EXCEPTION OCCURED: " + str(e))
                 repo.set_next_problem(course_id, user_id, {'error': str(e)})
-                pass
+
             except DataException as e:
                 print("--------------------\tDATA EXCEPTION HAPPENED, OH NO!")
                 #TODO: after deciding if set_next_problem could throw an exception here
-                pass
+
         else:
             print("--------------------\tSELECTION NOT REQUIRED!")
 

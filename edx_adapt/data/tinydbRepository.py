@@ -286,7 +286,7 @@ class TinydbRepository(interface.DataInterface):
             #sanity check, is this jsonable and back?
             s = json.dumps(val)
             o = json.loads(s)
-            
+
             element = Query()
             table.remove(element.key == key)
             print("--------------------\tDB_SET INSERTING SHIZNIT")

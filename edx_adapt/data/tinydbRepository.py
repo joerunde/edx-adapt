@@ -13,11 +13,11 @@ class TinydbRepository(interface.DataInterface):
 
         # Create or load backing store
         self.db = TinyDB(db_path)
+        self.write_lock = threading.Lock()
         self.generic_table_name = "Generic"
         self.generic = self.db.table(self.generic_table_name)
         self.db_set(self.generic, "MAGIC JOHNSON", "This is the generic store table")
-        self.write_lock = threading.Lock()
-
+        
         """ Course setup methods """
     def post_course(self, course_id):
         self.assert_no_table(course_id)

@@ -17,7 +17,7 @@ class TinydbRepository(interface.DataInterface):
         self.generic_table_name = "Generic"
         self.generic = self.db.table(self.generic_table_name)
         self.db_set(self.generic, "MAGIC JOHNSON", "This is the generic store table")
-        
+
         """ Course setup methods """
     def post_course(self, course_id):
         self.assert_no_table(course_id)
@@ -267,18 +267,16 @@ class TinydbRepository(interface.DataInterface):
     access to persistent storage
     """
     def set(self, key, value):
-        with self.write_lock:
-            print("--------------------\tGENERIC DB_SET GOING DOWN!")
-            print("--------------------\tKEY: " + str(key))
-            print("--------------------\tVAL: " + str(value))
-            table = self.db.table(self.generic_table_name)
-            self.db_set(table, key, value)
-            print("--------------------\tGENERIC DB_SET DONE!")
+        print("--------------------\tGENERIC DB_SET GOING DOWN!")
+        print("--------------------\tKEY: " + str(key))
+        print("--------------------\tVAL: " + str(value))
+        table = self.db.table(self.generic_table_name)
+        self.db_set(table, key, value)
+        print("--------------------\tGENERIC DB_SET DONE!")
     def get(self, key):
-        with self.write_lock:
-            print("--------------------\tGENERIC DB_GET GRABBING: " + str(key))
-            table = self.db.table(self.generic_table_name)
-            return self.db_get(table, key)
+        print("--------------------\tGENERIC DB_GET GRABBING: " + str(key))
+        table = self.db.table(self.generic_table_name)
+        return self.db_get(table, key)
 
     def db_set(self, table, key, val):
         """@type table: TinyDB"""

@@ -3,6 +3,7 @@
 import datetime
 import threading
 import interface
+import json
 from tinydb import TinyDB, Query
 
 
@@ -150,6 +151,7 @@ class TinydbRepository(interface.DataInterface):
 
         curnext = self.db_get(ctable, self.get_user_problem_key(user_id))
         curnext['next'] = problem_dict
+
         self.db_set(ctable, self.get_user_problem_key(user_id), curnext)
 
     def advance_problem(self, course_id, user_id):
@@ -281,6 +283,10 @@ class TinydbRepository(interface.DataInterface):
     def db_set(self, table, key, val):
         """@type table: TinyDB"""
         with self.write_lock:
+            #sanity check, is this jsonable and back?
+            s = json.dumps(val)
+            o = json.loads(s)
+            
             element = Query()
             table.remove(element.key == key)
             print("--------------------\tDB_SET INSERTING SHIZNIT")

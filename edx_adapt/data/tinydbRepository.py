@@ -1,6 +1,7 @@
 """Repository that implements DataInterface using a tinydb backend """
 
 import datetime
+import threading
 import interface
 from tinydb import TinyDB, Query
 
@@ -15,6 +16,7 @@ class TinydbRepository(interface.DataInterface):
         self.generic_table_name = "Generic"
         self.generic = self.db.table(self.generic_table_name)
         self.db_set(self.generic, "MAGIC JOHNSON", "This is the generic store table")
+        self.write_lock = threading.Lock()
 
         """ Course setup methods """
     def post_course(self, course_id):
@@ -265,33 +267,37 @@ class TinydbRepository(interface.DataInterface):
     access to persistent storage
     """
     def set(self, key, value):
-        print("--------------------\tGENERIC DB_SET GOING DOWN!")
-        print("--------------------\tKEY: " + str(key))
-        print("--------------------\tVAL: " + str(value))
-        table = self.db.table(self.generic_table_name)
-        self.db_set(table, key, value)
-        print("--------------------\tGENERIC DB_SET DONE!")
+        with self.write_lock:
+            print("--------------------\tGENERIC DB_SET GOING DOWN!")
+            print("--------------------\tKEY: " + str(key))
+            print("--------------------\tVAL: " + str(value))
+            table = self.db.table(self.generic_table_name)
+            self.db_set(table, key, value)
+            print("--------------------\tGENERIC DB_SET DONE!")
     def get(self, key):
-        print("--------------------\tGENERIC DB_GET GRABBING: " + str(key))
-        table = self.db.table(self.generic_table_name)
-        return self.db_get(table, key)
+        with self.write_lock:
+            print("--------------------\tGENERIC DB_GET GRABBING: " + str(key))
+            table = self.db.table(self.generic_table_name)
+            return self.db_get(table, key)
 
     def db_set(self, table, key, val):
         """@type table: TinyDB"""
-        element = Query()
-        table.remove(element.key == key)
-        print("--------------------\tDB_SET INSERTING SHIZNIT")
-        print("--------------------\tKEY: " + str(key))
-        print("--------------------\tVAL: " + str(val))
-        table.insert({'key':key, 'val': val})
+        with self.write_lock:
+            element = Query()
+            table.remove(element.key == key)
+            print("--------------------\tDB_SET INSERTING SHIZNIT")
+            print("--------------------\tKEY: " + str(key))
+            print("--------------------\tVAL: " + str(val))
+            table.insert({'key':key, 'val': val})
 
     def db_get(self, table, key):
         """@type table: TinyDB"""
-        element = Query()
-        result = table.search(element.key == key)
-        if len(result) == 0:
-            raise interface.DataException("Key {} not found in table".format(key))
-        return result[0]['val']
+        with self.write_lock:
+            element = Query()
+            result = table.search(element.key == key)
+            if len(result) == 0:
+                raise interface.DataException("Key {} not found in table".format(key))
+            return result[0]['val']
 
     def db_append(self, table, listkey, val):
         """@type table: TinyDB"""

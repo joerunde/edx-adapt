@@ -49,6 +49,11 @@ class SkillSeparateRandomSelector(SelectInterface):
         :return: the next problem to give to the user
         """
         try:
+            #if pretest problems are left, give the next one
+            #pretest_problems = self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)
+            #if len(pretest_problems) > 0:
+            #    return pretest_problems[0]
+
             candidate_problem_list = [] # List of problems to choose from
             for skill_name in self.data_interface.get_skills(course_id): # For each skill
                 # Gets the parameters corresponding to the course, user, skill - parameter set must include "threshold"

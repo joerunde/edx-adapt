@@ -272,6 +272,9 @@ class TinydbRepository(interface.DataInterface):
         """@type table: TinyDB"""
         element = Query()
         table.remove(element.key == key)
+        print("--------------------\tDB_SET INSERTING SHIZNIT")
+        print("--------------------\tKEY: " + str(key))
+        print("--------------------\tVAL: " + str(val))
         table.insert({'key':key, 'val': val})
 
     def db_get(self, table, key):

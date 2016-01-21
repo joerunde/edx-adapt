@@ -10,11 +10,15 @@ from tinydb import TinyDB, Query
 
 class TinydbRepository(interface.DataInterface):
 
+    #create single database
+    #TODO: yeah...
+    db = TinyDB('/tmp/2.json')
+
     def __init__(self, db_path):
         super(TinydbRepository, self).__init__()
 
         # Create or load backing store
-        self.db = TinyDB(db_path)
+        self.db = TinydbRepository.db
         self.write_lock = threading.Lock()
         self.generic_table_name = "Generic"
         self.generic = self.db.table(self.generic_table_name)

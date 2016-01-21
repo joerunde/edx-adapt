@@ -1,6 +1,7 @@
 """Repository that implements DataInterface using a tinydb backend """
 
 import datetime
+import time
 import threading
 import interface
 import json
@@ -292,6 +293,7 @@ class TinydbRepository(interface.DataInterface):
             print("--------------------\tDB_SET INSERTING SHIZNIT")
             print("--------------------\tKEY: " + str(key))
             print("--------------------\tVAL: " + str(val))
+            time.sleep(0.1)
             table.insert({'key':key, 'val': val})
 
     def db_get(self, table, key):

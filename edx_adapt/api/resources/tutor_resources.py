@@ -114,6 +114,9 @@ class UserInteraction(Resource):
                 print("--------------------\tSTARTING SELECTOR!")
                 t = threading.Thread(target=run_selector, args=(course_id, user_id, self.selector, self.repo))
                 t.start()
+                #fuck it, wait up for that bitch here
+                t.join()
+                #TODO: OH HELL NO
             except Exception as e:
                 print("--------------------\tEXCEPTION STARTING SELECTION THREAD: " + str(e))
                 abort(500, message="Interaction successfully stored, but an error occurred starting "

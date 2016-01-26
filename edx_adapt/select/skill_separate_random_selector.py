@@ -50,9 +50,9 @@ class SkillSeparateRandomSelector(SelectInterface):
         """
         try:
             #if pretest problems are left, give the next one
-            #pretest_problems = self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)
-            #if len(pretest_problems) > 0:
-            #    return pretest_problems[0]
+            pretest_problems = self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)
+            if len(pretest_problems) > 0:
+                return sorted(pretest_problems, key=lambda k: k['problem_name'])[0]
 
             candidate_problem_list = [] # List of problems to choose from
             for skill_name in self.data_interface.get_skills(course_id): # For each skill
@@ -88,7 +88,8 @@ class SkillSeparateRandomSelector(SelectInterface):
         :param user_id
         :return: the first problem to give to the user
         """
-        return self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)[0]
+        pretest = self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)
+        return sorted(pretest, key=lambda k: k['problem_name'])[0]
 
 
     def _get_key(self, course_id, user_id, skill_name):

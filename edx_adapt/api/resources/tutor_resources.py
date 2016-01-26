@@ -29,7 +29,15 @@ class UserProblems(Resource):
         if not nex or 'error' in nex:
             okay = False
 
-        return {"next": nex, "current": cur, "okay": okay}
+        done_with_current = False
+        try:
+            log = self.repo.get_raw_user_data(course_id, user_id)
+            current_correct = [x for x in log if x['problem']['problem_name'] == cur['problem_name'] and x['correct'] == 1]
+            done_with_current = ( len(current_correct) > 0)
+        except DataException as e:
+            abort(500, message=str(e))
+
+        return {"next": nex, "current": cur, "done_with_current": done_with_current, "okay": okay}
 
 
 """ Argument parser for posting a user response """

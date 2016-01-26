@@ -6,6 +6,7 @@ from flask_restful import Api
 # import API resources
 import resources.course_resources as CR
 import resources.tutor_resources as TR
+import resources.data_serve_resources as DR
 # import data module
 import edx_adapt.data.tinydbRepository as repo
 import edx_adapt.select.skill_separate_random_selector as select
@@ -36,6 +37,9 @@ api.add_resource(TR.UserInteraction, base + '/course/<course_id>/user/<user_id>/
 api.add_resource(TR.UserProblems, base + '/course/<course_id>/user/<user_id>',
                  resource_class_kwargs={'data': database, 'selector': selector})
 api.add_resource(TR.UserPageLoad, base + '/course/<course_id>/user/<user_id>/pageload',
+                 resource_class_kwargs={'data': database, 'selector': selector})
+
+api.add_resource(DR.SingleProblemRequest, base + '/data/course/<course_id>/user/<user_id>/problem/<problem_name>',
                  resource_class_kwargs={'data': database, 'selector': selector})
 
 

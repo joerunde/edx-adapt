@@ -32,7 +32,8 @@ class UserProblems(Resource):
         done_with_current = False
         try:
             log = self.repo.get_raw_user_data(course_id, user_id)
-            current_correct = [x for x in log if x['problem']['problem_name'] == cur['problem_name'] and x['correct'] == 1]
+            current_correct = [x for x in log if x['type'] == 'response' and 
+                               x['problem']['problem_name'] == cur['problem_name'] and x['correct'] == 1]
             done_with_current = ( len(current_correct) > 0)
         except DataException as e:
             abort(500, message=str(e))

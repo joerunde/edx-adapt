@@ -6,9 +6,6 @@ from flask_restful import Resource, abort, reqparse
 from edx_adapt.data.interface import DataException
 from edx_adapt.select.interface import SelectException
 
-course_parser = reqparse.RequestParser()
-course_parser.add_argument('course_id', type=str, required=True, location='json', help="Please supply a course ID")
-
 param_parser = reqparse.RequestParser()
 param_parser.add_argument('course_id', type=str, loation='json', help="Optionally supply a course id")
 param_parser.add_argument('user_id', type=str, location='json', help="Optionally supply a user ID")

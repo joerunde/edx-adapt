@@ -39,6 +39,7 @@ class UserProblems(Resource):
                                    x['problem']['problem_name'] == cur['problem_name'] and x['correct'] == 1]
                 done_with_current = ( len(current_correct) > 0)
             except DataException as e:
+                print("--------------------\tDATA EXCEPTION: " + str(e))
                 abort(500, message=str(e))
 
         return {"next": nex, "current": cur, "done_with_current": done_with_current, "okay": okay}
@@ -135,6 +136,7 @@ class UserInteraction(Resource):
                                    "a problem selection thread: " + e.message)
 
         except DataException as e:
+            print("--------------------\tDATA EXCEPTION: " + str(e))
             abort(500, message=e.message)
 
         return {"success": True}, 200
@@ -161,6 +163,7 @@ class UserPageLoad(Resource):
             if nex and 'error' not in nex and args['problem'] == nex['problem_name']:
                 self.repo.advance_problem(course_id, user_id)
         except DataException as e:
+            print("--------------------\tDATA EXCEPTION: " + str(e))
             abort(500, message=e.message)
 
         return {"success": True}, 200

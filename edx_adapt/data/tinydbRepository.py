@@ -91,15 +91,11 @@ class TinydbRepository(interface.DataInterface):
             return [x for x in problems if skill_name in x['skills']]
 
     def get_num_pretest(self, course_id, skill_name):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        pretest = [x for x in self.db_get(ctable, 'problems') if x['pretest'] == True]
+        pretest = [x for x in self.get_problems(course_id, skill_name) if x['pretest'] == True]
         return len(pretest)
 
     def get_num_posttest(self, course_id, skill_name):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        posttest = [x for x in self.db_get(ctable, 'problems') if x['posttest'] == True]
+        posttest = [x for x in self.get_problems(course_id, skill_name) if x['posttest'] == True]
         return len(posttest)
 
     def get_in_progress_users(self, course_id):

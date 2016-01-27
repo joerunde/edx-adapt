@@ -34,6 +34,11 @@ class SkillSeparateRandomSelector(SelectInterface):
                                       So if the string is empty, there is one parameter set per course
         """
         super(SkillSeparateRandomSelector, self).__init__(data_interface, model_interface)
+
+        print self.data_interface
+        print self.model_interface
+        print self.model_interface.get_probability_correct
+
         self.parameter_access_mode_list.extend(parameter_access_mode.split())
         for mode in self.parameter_access_mode_list:
             if mode not in self.valid_mode_list:

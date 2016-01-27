@@ -120,10 +120,17 @@ class TinydbRepository(interface.DataInterface):
         key = self.get_user_log_key(user_id)
         data = {'problem': problem, 'correct': correct, 'attempt': attempt, 'unix_s': unix_seconds, 'type': 'response',
                 'timestamp': datetime.datetime.fromtimestamp(unix_seconds).strftime('%Y-%m-%d %H:%M:%S')}
-        try:
-            self.db_append(ctable, key, data)
-        except interface.DataException:
-            pass # this just means the interaction already exists, don't need to throw error here
+
+        old_attempt = [x for x in self.get_raw_user_data(course_id, user_id)
+                       if x['problem']['problem_name'] == problem_name and x['type'] == 'response'
+                          and x['attempt'] == attempt]
+
+        if len(old_attempt) > 0:
+            # don't record the same attempt twice
+            return
+
+        # allow the exception from append to throw if some shit goes down
+        self.db_append(ctable, key, data)
 
         # is user finished...?
         remaining_post = self.get_all_remaining_posttest_problems(course_id, user_id)
@@ -135,17 +142,21 @@ class TinydbRepository(interface.DataInterface):
                 self.db_set(ctable, 'users_in_progress', prog)
 
     def post_load(self, course_id, problem_name, user_id, unix_seconds):
-        # TODO: maybe only record one load per problem. Think about users exiting and restarting...?
         self.assert_table(course_id)
         ctable = self.db.table(course_id)
         problem = self._get_problem(ctable, problem_name)
         key = self.get_user_log_key(user_id)
         data = {'problem': problem, 'unix_s': unix_seconds, 'type': 'page_load',
                 'timestamp': datetime.datetime.fromtimestamp(unix_seconds).strftime('%Y-%m-%d %H:%M:%S')}
-        try:
-            self.db_append(ctable, key, data)
-        except interface.DataException:
-            pass # this just means the interaction already exists, don't need to throw error here
+
+        older_loads = [x for x in self.get_raw_user_data(course_id, user_id)
+                       if x['problem']['problem_name'] == problem_name and x['type'] == 'page_load']
+        if len(older_loads) > 0:
+            #already stored a load time for this problem. For now, don't record this one
+            return
+
+        self.db_append(ctable, key, data)
+
 
     def set_next_problem(self, course_id, user_id, problem_dict):
         self.assert_table(course_id)

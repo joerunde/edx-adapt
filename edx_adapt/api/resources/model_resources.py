@@ -7,7 +7,7 @@ from edx_adapt.data.interface import DataException
 from edx_adapt.select.interface import SelectException
 
 param_parser = reqparse.RequestParser()
-param_parser.add_argument('course_id', type=str, loation='json', help="Optionally supply a course id")
+param_parser.add_argument('course_id', type=str, location='json', help="Optionally supply a course id")
 param_parser.add_argument('user_id', type=str, location='json', help="Optionally supply a user ID")
 param_parser.add_argument('skill_name', type=str, location='json', help="Optionally supply the name of a skill")
 param_parser.add_argument('params', type=dict, location='json', required=True,

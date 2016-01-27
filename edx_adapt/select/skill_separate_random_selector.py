@@ -70,7 +70,7 @@ class SkillSeparateRandomSelector(SelectInterface):
                 )
                 # If the probability is less than threshold, add the problems to candidate list
                 if prob_correct < skill_parameter['threshold']:
-                    candidate_problem_list.append(self.data_interface.get_remaining_problems(course_id, skill_name, user_id))
+                    candidate_problem_list.extend(self.data_interface.get_remaining_problems(course_id, skill_name, user_id))
 
             if candidate_problem_list: # If candidate list is not empty, randomly choose one from it
                 return random.choice(candidate_problem_list)

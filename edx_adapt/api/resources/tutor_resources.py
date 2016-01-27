@@ -88,7 +88,7 @@ def run_selector(course_id, user_id, selector, repo):
                 repo.set_next_problem(course_id, user_id, {'error': str(e)})
 
             except DataException as e:
-                print("--------------------\tDATA EXCEPTION HAPPENED, OH NO!")
+                print("--------------------\tDATA EXCEPTION HAPPENED, OH NO!" + str(e))
                 #TODO: after deciding if set_next_problem could throw an exception here
 
         else:

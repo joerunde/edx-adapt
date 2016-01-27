@@ -21,7 +21,7 @@ api = Api(app)
 base = '/api/v1'
 
 database = repo.TinydbRepository('/tmp/2.json')
-student_model = bkt.BKT
+student_model = bkt.BKT()
 selector = select.SkillSeparateRandomSelector(database, student_model)
 
 api.add_resource(CR.Courses, base + '/course',

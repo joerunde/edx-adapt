@@ -65,7 +65,7 @@ class SkillSeparateRandomSelector(SelectInterface):
                 skill_parameter = self.data_interface.get(self._get_key(course_id, user_id, skill_name))
                 prob_correct = self.model_interface.get_probability_correct(
                     self.data_interface.get_num_pretest(course_id, skill_name), # number of pre-test problems on the skill
-                    self.data_interface.get_interactions(course_id, skill_name, user_id), # trajectory of correctness
+                    [x['correct'] for x in self.data_interface.get_interactions(course_id, skill_name, user_id)], # trajectory of correctness
                     skill_parameter # parameters for the skill
                 )
                 # If the probability is less than threshold, add the problems to candidate list

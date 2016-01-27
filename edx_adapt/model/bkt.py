@@ -57,9 +57,9 @@ class BKT(ModelInterface):
         """
         self.alpha[0] *= params['pg'] * is_correct + (1 - params['pg']) * (1 - is_correct)
         self.alpha[1] *= (1 - params['ps']) * is_correct + params['ps'] * (1 - is_correct)
-        new_self.alpha = [self.alpha[0] * (1 - params['pt']), self.alpha[0] * params['pt'] + self.alpha[1]]
-        self.alpha[0] = new_self.alpha[0]
-        self.alpha[1] = new_self.alpha[1]
+        self.new_alpha = [self.alpha[0] * (1 - params['pt']), self.alpha[0] * params['pt'] + self.alpha[1]]
+        self.alpha[0] = self.new_alpha[0]
+        self.alpha[1] = self.new_alpha[1]
 
 
     def get_current_probability_correct(self, params):

@@ -42,3 +42,4 @@ class Parameters(Resource):
             abort(500, message=str(e))
 
         return {'success': True}, 200
+

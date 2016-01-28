@@ -138,3 +138,34 @@ class Problems(Resource):
             abort(500, message=str(e))
 
         return {'success': True}, 200
+
+
+experiment_parser = reqparse.RequestParser()
+experiment_parser.add_argument('experiment_name', type=str, location='json', required=True,
+                          help="Please supply the name of the experiment")
+experiment_parser.add_argument('start_time', type=int, location='json', required=True,
+                          help="Please supply the start date in unix seconds")
+experiment_parser.add_argument('end_time', type=int, location='json', required=True,
+                          help="Please supply the end date in unix seconds")
+
+class Experiments(Resource):
+    def __init__(self, **kwargs):
+        self.repo = kwargs['data']
+        """@type repo: DataInterface"""
+
+    def get(self, course_id):
+        exps = []
+        try:
+            exps = self.repo.get_experiments(course_id)
+        except DataException as e:
+            print("--------------------\tDATA EXCEPTION: " + str(e))
+            abort(500, message=str(e))
+        return {'experiments': exps}
+
+    def post(self, course_id):
+        args = experiment_parser.parse_args()
+        try:
+            self.repo.post_experiment(course_id, args['experiment_name'], args['start_time'], args['end_time'])
+        except DataException as e:
+            print("--------------------\tDATA EXCEPTION: " + str(e))
+            abort(500, message=str(e))

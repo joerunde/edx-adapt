@@ -1,54 +1,40 @@
 """Repository that implements DataInterface using a tinydb backend """
 
 import datetime
-import time
-import threading
 import interface
-import json
-from tinydb import TinyDB, Query
 
-
-class TinydbRepository(interface.DataInterface):
+class CourseRepository(interface.DataInterface):
 
     #create single database
     #TODO: yeah...
-    db = TinyDB('/tmp/2.json')
-    write_lock = threading.Lock()
+    #db = TinyDB('/tmp/2.json')
+    #write_lock = threading.Lock()
 
-    def __init__(self, db_path):
-        super(TinydbRepository, self).__init__()
-
-        # Create or load backing store
-        self.db = TinydbRepository.db
+    def __init__(self, storage_module):
+        super(CourseRepository, self).__init__(storage_module)
+        """@type self.store: StorageInterface"""
         self.generic_table_name = "Generic"
-        self.generic = self.db.table(self.generic_table_name)
-        self.db_set(self.generic, "MAGIC JOHNSON", "This is the generic store table")
+        self.store.create_table(self.generic_table_name)
+        self.store.set(self.generic_table_name, "MAGIC JOHNSON", "This is the generic store table")
 
         """ Course setup methods """
     def post_course(self, course_id):
-        self.assert_no_table(course_id)
-
-        ctable = self.db.table(course_id)
-        self.db_set(ctable, 'users_in_progress', [])
-        self.db_set(ctable, 'users_finished', [])
-        self.db_set(ctable, 'skills', [])
-        self.db_set(ctable, 'problems', [])
-        self.db_set(ctable, 'experiments', [])
+        self.store.create_table(course_id)
+        self.store.set(course_id, 'users_in_progress', [])
+        self.store.set(course_id, 'users_finished', [])
+        self.store.set(course_id, 'skills', [])
+        self.store.set(course_id, 'problems', [])
+        self.store.set(course_id, 'experiments', [])
 
     def post_skill(self, course_id, skill_name):
-        self.assert_table(course_id)
-
-        ctable = self.db.table(course_id)
-        self.db_append(ctable, 'skills', skill_name)
+        self.store.append(course_id, 'skills', skill_name)
 
     def _add_problem(self, course_id, skill_names, problem_name, tutor_url, b_pretest, b_posttest):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        skills = self.db_get(ctable, 'skills')
+        skills = self.store.get(course_id, 'skills')
         for skill in skill_names:
             if skill not in skills:
                 raise interface.DataException("No such skill: {}".format(skill))
-        self.db_append(ctable, 'problems', {'problem_name': problem_name, 'tutor_url': tutor_url,
+        self.store.append(course_id, 'problems', {'problem_name': problem_name, 'tutor_url': tutor_url,
                                             'pretest': b_pretest, 'posttest': b_posttest, 'skills':skill_names})
 
     def post_problem(self, course_id, skill_names, problem_name, tutor_url):
@@ -61,30 +47,23 @@ class TinydbRepository(interface.DataInterface):
         self._add_problem(course_id, skill_names, problem_name, tutor_url, False, True)
 
     def enroll_user(self, course_id, user_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        self.db_append(ctable, 'users_in_progress', user_id)
-        self.db_set(ctable, self.get_user_log_key(user_id), [])
-        self.db_set(ctable, self.get_user_problem_key(user_id), {'current': None, 'next': None})
-        # TODO: have dexter make a choose_first in selector
+        self.store.append(course_id, 'users_in_progress', user_id)
+        self.store.set(course_id, self._get_user_log_key(user_id), [])
+        self.store.set(course_id, self._get_user_problem_key(user_id), {'current': None, 'next': None})
 
     """ Retrieve course information """
     def get_course_ids(self):
-        courses = self.db.tables()
+        courses = self.store.get_tables()
         courses.remove('_default')
         courses.remove(self.generic_table_name)
         return list(courses)
 
     def get_skills(self, course_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        return self.db_get(ctable, 'skills')
+        return self.store.get(course_id, 'skills')
 
     def get_problems(self, course_id, skill_name=None):
         """ Get all problems related to this course-skill pair:, pretest, normal, and posttest """
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        problems = self.db_get(ctable, 'problems')
+        problems = self.store.get(course_id, 'problems')
         if skill_name == None:
             return problems
         else:
@@ -99,21 +78,15 @@ class TinydbRepository(interface.DataInterface):
         return len(posttest)
 
     def get_in_progress_users(self, course_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        return self.db_get(ctable, 'users_in_progress')
+        return self.store.get(course_id, 'users_in_progress')
 
     def get_finished_users(self, course_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        return self.db_get(ctable, 'users_finished')
+        return self.store.get(course_id, 'users_finished')
 
     """ Add user data """
     def post_interaction(self, course_id, problem_name, user_id, correct, attempt, unix_seconds):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        problem = self._get_problem(ctable, problem_name)
-        key = self.get_user_log_key(user_id)
+        problem = self._get_problem(course_id, problem_name)
+        key = self._get_user_log_key(user_id)
         data = {'problem': problem, 'correct': correct, 'attempt': attempt, 'unix_s': unix_seconds, 'type': 'response',
                 'timestamp': datetime.datetime.fromtimestamp(unix_seconds).strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -126,22 +99,20 @@ class TinydbRepository(interface.DataInterface):
             return
 
         # allow the exception from append to throw if some shit goes down
-        self.db_append(ctable, key, data)
+        self.store.append(course_id, key, data)
 
         # is user finished...?
         remaining_post = self.get_all_remaining_posttest_problems(course_id, user_id)
         if len(remaining_post) == 0:
             if user_id in self.get_in_progress_users(course_id):
-                self.db_append(ctable, 'users_finished', user_id)
-                prog = self.db_get(ctable, 'users_in_progress')
+                self.store.append(course_id, 'users_finished', user_id)
+                prog = self.store.get(course_id, 'users_in_progress')
                 prog.remove(user_id)
-                self.db_set(ctable, 'users_in_progress', prog)
+                self.store.set(course_id, 'users_in_progress', prog)
 
     def post_load(self, course_id, problem_name, user_id, unix_seconds):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        problem = self._get_problem(ctable, problem_name)
-        key = self.get_user_log_key(user_id)
+        problem = self._get_problem(course_id, problem_name)
+        key = self._get_user_log_key(user_id)
         data = {'problem': problem, 'unix_s': unix_seconds, 'type': 'page_load',
                 'timestamp': datetime.datetime.fromtimestamp(unix_seconds).strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -151,33 +122,28 @@ class TinydbRepository(interface.DataInterface):
             #already stored a load time for this problem. For now, don't record this one
             return
 
-        self.db_append(ctable, key, data)
-
+        self.store.append(course_id, key, data)
 
     def set_next_problem(self, course_id, user_id, problem_dict):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
         # if no error, assert that this problem exists in this course:
         if 'error' not in problem_dict:
-            problem_dict = self.get_and_assert_problem_exists(ctable, problem_dict)
+            problem_dict = self._get_and_assert_problem_exists(course_id, problem_dict)
 
-        curnext = self.db_get(ctable, self.get_user_problem_key(user_id))
+        curnext = self.store.get(course_id, self._get_user_problem_key(user_id))
         curnext['next'] = problem_dict
 
-        self.db_set(ctable, self.get_user_problem_key(user_id), curnext)
+        self.store.set(course_id, self._get_user_problem_key(user_id), curnext)
 
     def advance_problem(self, course_id, user_id):
         """
         required: Must set user's next problem to 'None'
         """
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        curnext = self.db_get(ctable, self.get_user_problem_key(user_id))
+        curnext = self.store.get(course_id, self._get_user_problem_key(user_id))
         # assert that next problem is valid (it could be an error message)
-        next_problem = self.get_and_assert_problem_exists(ctable, curnext['next'])
+        next_problem = self._get_and_assert_problem_exists(course_id, curnext['next'])
         curnext['current'] = next_problem
         curnext['next'] = None
-        self.db_set(ctable, self.get_user_problem_key(user_id), curnext)
+        self.store.set(course_id, self._get_user_problem_key(user_id), curnext)
 
     """ Retrieve user information """
     def get_all_remaining_problems(self, course_id, user_id):
@@ -218,19 +184,13 @@ class TinydbRepository(interface.DataInterface):
                if x['type'] == 'response' and x['attempt'] == 1]
 
     def get_current_problem(self, course_id, user_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        return self.db_get(ctable, self.get_user_problem_key(user_id))['current']
+        return self.store.get(course_id, self._get_user_problem_key(user_id))['current']
 
     def get_next_problem(self, course_id, user_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        return self.db_get(ctable, self.get_user_problem_key(user_id))['next']
+        return self.store.get(course_id, self._get_user_problem_key(user_id))['next']
 
     def get_raw_user_data(self, course_id, user_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        return self.db_get(ctable, self.get_user_log_key(user_id))
+        return self.store.get(course_id, self._get_user_log_key(user_id))
 
     def get_raw_user_skill_data(self, course_id, skill_name, user_id):
         return [x for x in self.get_raw_user_data(course_id, user_id) if skill_name in x['problem']['skills']]
@@ -238,15 +198,11 @@ class TinydbRepository(interface.DataInterface):
 
     """ Methods to group users by experiment, e.g. for AB policy testing """
     def post_experiment(self, course_id, experiment_name, start, end):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
         experiment = {'experiment_name': experiment_name, 'start_time': start, 'end_time': end}
-        self.db_append(ctable, 'experiments', experiment)
+        self.store.append(course_id, 'experiments', experiment)
 
     def get_experiments(self, course_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        return self.db_get(ctable, 'experiments')
+        return self.store.get(course_id, 'experiments')
 
     def get_experiment(self, course_id, experiment_name):
         expl = [x for x in self.get_experiments(course_id) if x['experiment_name'] == experiment_name]
@@ -270,11 +226,9 @@ class TinydbRepository(interface.DataInterface):
 
     def delete_experiment(self, course_id, experiment_name):
         exp = self.get_experiment(course_id, experiment_name)
-        ctable = self.db.table(course_id)
-        l = self.db_get(ctable, 'experiments')
+        l = self.store.get(course_id, 'experiments')
         l.remove(exp)
-        self.db_set(ctable, 'experiments', l)
-
+        self.store.set(course_id, 'experiments', l)
 
 
     """ General backing store access: allows other modules
@@ -284,73 +238,27 @@ class TinydbRepository(interface.DataInterface):
         print("--------------------\tGENERIC DB_SET GOING DOWN!")
         print("--------------------\tKEY: " + str(key))
         print("--------------------\tVAL: " + str(value))
-        table = self.db.table(self.generic_table_name)
-        self.db_set(table, key, value)
+        self.store.set(self.generic_table_name, key, value)
         print("--------------------\tGENERIC DB_SET DONE!")
     def get(self, key):
         print("--------------------\tGENERIC DB_GET GRABBING: " + str(key))
-        table = self.db.table(self.generic_table_name)
-        return self.db_get(table, key)
+        return self.store.get(self.generic_table_name, key)
 
-    def db_set(self, table, key, val):
-        """@type table: TinyDB"""
-        with TinydbRepository.write_lock:
-            #sanity check, is this jsonable and back?
-            s = json.dumps(val)
-            o = json.loads(s)
-
-            element = Query()
-            table.remove(element.key == key)
-            print("--------------------\tDB_SET INSERTING SHIZNIT")
-            print("--------------------\tKEY: " + str(key))
-            print("--------------------\tVAL: " + str(val))
-            table.insert({'key':key, 'val': val})
-
-    def db_get(self, table, key):
-        """@type table: TinyDB"""
-        with TinydbRepository.write_lock:
-            element = Query()
-            result = table.search(element.key == key)
-            if len(result) == 0:
-                raise interface.DataException("Key {} not found in table".format(key))
-            return result[0]['val']
-
-    def db_append(self, table, listkey, val):
-        """@type table: TinyDB"""
-        l = self.db_get(table, listkey)
-        if val in l:
-            raise interface.DataException("Value: {0} already exists in list: {1}".format(val, listkey))
-        l.append(val)
-        #self.db_set(table, listkey, l)
-        element = Query()
-        with TinydbRepository.write_lock:
-            table.update({'val':l}, element.key == listkey)
-
-    def assert_no_table(self, name):
-        table = self.db.table(name)
-        if len(table) > 0:
-            raise interface.DataException("Table already exists: {}".format(name))
-
-    def assert_table(self, name):
-        table = self.db.table(name)
-        if len(table) == 0:
-            raise interface.DataException("Table does not exist: {}".format(name))
-
-    def get_user_log_key(self, user_id):
+    def _get_user_log_key(self, user_id):
         return user_id + "_log"
 
-    def get_user_problem_key(self, user_id):
+    def _get_user_problem_key(self, user_id):
         return user_id + "_cur_next"
 
-    def _get_problem(self, ctable, problem_name):
-        problems = self.db_get(ctable, 'problems')
+    def _get_problem(self, course_id, problem_name):
+        problems = self.store.get(course_id, 'problems')
         problem = [x for x in problems if x['problem_name'] == problem_name]
         if len(problem) == 0:
             raise interface.DataException("Problem not found: {}".format(problem_name))
         return problem[0]
 
-    def get_probs_done(self, ctable, user_id):
-        log = self.db_get(ctable, self.get_user_log_key(user_id))
+    def _get_probs_done(self, course_id, user_id):
+        log = self.store.get(course_id, self._get_user_log_key(user_id))
         done = []
         for interaction in log:
             if interaction['type'] == 'response':
@@ -358,21 +266,19 @@ class TinydbRepository(interface.DataInterface):
                     done.append(interaction['problem'])
         return done
 
-    def _get_remaining_by_user(self, course_id, user_id):
-        self.assert_table(course_id)
-        ctable = self.db.table(course_id)
-        all = self.db_get(ctable, 'problems')
-        done = self.get_probs_done(ctable, user_id)
+    def _get_remaining_by_user(self, course_id, user_id):  
+        all = self.store.get(course_id, 'problems')
+        done = self._get_probs_done(course_id, user_id)
         remaining = [x for x in all if x not in done]
         return remaining
 
-    def get_and_assert_problem_exists(self, ctable, problem_dict):
-        problems = self.db_get(ctable, 'problems')
+    def _get_and_assert_problem_exists(self, course_id, problem_dict):
+        problems = self.store.get(course_id, 'problems')
         if problem_dict not in problems:
             # still try to look up the problem
             if 'problem_name' not in problem_dict:
                 raise interface.DataException("Next problem not in database, "
                                               "and does not contain problem_name: {}".format(str(problem_dict)))
-            problem_dict = self._get_problem(ctable, problem_dict['problem_name'])
+            problem_dict = self._get_problem(course_id, problem_dict['problem_name'])
             # above line will raise exception if it can't be found
         return problem_dict

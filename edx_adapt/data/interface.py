@@ -1,3 +1,31 @@
+class StorageInterface(object):
+    """ Interface for a persistent storage backend. Basic table and key/value storage, with list operations
+    """
+
+    def __init__(self):
+        pass
+
+    def create_table(self, table_name):
+        raise NotImplementedError( "Storage module must implement this" )
+
+    def get_tables(self):
+        raise NotImplementedError( "Storage module must implement this" )
+
+    def get(self, table_name, key):
+        raise NotImplementedError( "Storage module must implement this" )
+
+    def set(self, table_name, key, val):
+        raise NotImplementedError( "Storage module must implement this" )
+
+    def append(self, table_name, list_key, val):
+        raise NotImplementedError( "Storage module must implement this" )
+
+    def remove(self, table_name, list_key, val):
+        raise NotImplementedError( "Storage module must implement this" )
+
+
+
+
 class DataInterface(object):
     """ This is the interface for the persistent data store
     backing an edX-adapt course. It stores information about
@@ -8,8 +36,9 @@ class DataInterface(object):
     the students' interactions with the problems.
     """
 
-    def __init__(self):
-        do = "nothing"
+    def __init__(self, storage_module):
+        """@type storage_module: StorageInterface"""
+        self.store = storage_module
 
     """ Course setup methods """
     def post_course(self, course_id):

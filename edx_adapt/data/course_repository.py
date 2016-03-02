@@ -14,8 +14,13 @@ class CourseRepository(interface.DataInterface):
         super(CourseRepository, self).__init__(storage_module)
         """@type self.store: StorageInterface"""
         self.generic_table_name = "Generic"
-        self.store.create_table(self.generic_table_name)
-        self.store.set(self.generic_table_name, "MAGIC JOHNSON", "This is the generic store table")
+        try:
+            self.store.create_table(self.generic_table_name)
+            self.store.set(self.generic_table_name, "MAGIC JOHNSON", "This is the generic store table")
+        except interface.DataException as e:
+            print "!!!! Make sure this isn't a problem: " + str(e)
+            print "(Generic table already existing is okay)"
+            pass
 
         """ Course setup methods """
     def post_course(self, course_id):

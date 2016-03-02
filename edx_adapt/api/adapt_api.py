@@ -2,7 +2,6 @@ import flask
 from flask import Flask
 from flask.ext.cors import CORS
 from flask_restful import Api
-
 # import API resources
 import resources.course_resources as CR
 import resources.tutor_resources as TR
@@ -10,6 +9,7 @@ import resources.data_serve_resources as DR
 import resources.model_resources as MR
 # import data and model stuff
 import edx_adapt.data.course_repository as repo
+import edx_adapt.data.tinydb_storage as store
 import edx_adapt.select.skill_separate_random_selector as select
 import edx_adapt.model.bkt as bkt
 
@@ -20,7 +20,7 @@ api = Api(app)
 # TODO: load from settings
 base = '/api/v1'
 
-database = repo.CourseRepository('/tmp/2.json')
+database = repo.CourseRepository(store.TinydbStorage('/tmp/2.json'))
 student_model = bkt.BKT()
 selector = select.SkillSeparateRandomSelector(database, student_model)
 

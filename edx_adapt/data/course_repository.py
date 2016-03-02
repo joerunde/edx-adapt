@@ -112,6 +112,10 @@ class CourseRepository(interface.DataInterface):
 
     def post_load(self, course_id, problem_name, user_id, unix_seconds):
         problem = self._get_problem(course_id, problem_name)
+        if problem != self.get_current_problem(course_id, user_id) and problem != self.get_next_problem(course_id, user_id):
+            #Don't log if this isn't the right problem
+            return
+
         key = self._get_user_log_key(user_id)
         data = {'problem': problem, 'unix_s': unix_seconds, 'type': 'page_load',
                 'timestamp': datetime.datetime.fromtimestamp(unix_seconds).strftime('%Y-%m-%d %H:%M:%S')}

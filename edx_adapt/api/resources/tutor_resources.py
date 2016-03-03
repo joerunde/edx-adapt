@@ -38,6 +38,12 @@ class UserProblems(Resource):
                 current_correct = [x for x in log if x['type'] == 'response' and
                                    x['problem']['problem_name'] == cur['problem_name'] and x['correct'] == 1]
                 done_with_current = ( len(current_correct) > 0)
+
+                #account for test questions: user is "done" after they input any answer
+                if cur["pretest"] or cur["posttest"]:
+                    if len([x for x in log if x['type'] == 'response']) > 0:
+                        done_with_current = True
+
             except DataException as e:
                 print("--------------------\tDATA EXCEPTION: " + str(e))
                 abort(500, message=str(e))

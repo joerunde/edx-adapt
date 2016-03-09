@@ -94,11 +94,12 @@ def fill_user_data(repo, course_id, user_id):
 
     data['by_skill'] = {}
     correct['by_skill'] = {}
+
     for skill in repo.get_skills(course_id):
         data['by_skill'][skill] = repo.get_interactions(course_id, skill, user_id)
         correct['by_skill'][skill] = repo.get_skill_trajectory(course_id, skill, user_id)
-        num_pre = repo.get_num_pretest(course_id, skill)
-        num_post = repo.get_num_posttest(course_id, skill)
+        num_pre[skill] = repo.get_num_pretest(course_id, skill)
+        num_post[skill] = repo.get_num_posttest(course_id, skill)
 
     blob = {'data':data, 'trajectories':correct, 'pretest_length': num_pre, 'posttest_length': num_post}
     return blob

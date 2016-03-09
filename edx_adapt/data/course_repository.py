@@ -184,11 +184,11 @@ class CourseRepository(interface.DataInterface):
         return [x['correct'] for x in self.get_interactions(course_id, skill_name, user_id)]
 
     def get_all_interactions(self, course_id, user_id):
-        return[{'problem': x['problem'], 'correct': x['correct']}
+        return[{'problem': x['problem'], 'correct': x['correct'], 'unix_s': x['unix_s']}
                for x in self.get_raw_user_data(course_id, user_id) if x['type'] == 'response' and x['attempt'] == 1]
 
     def get_interactions(self, course_id, skill_name, user_id):
-        return[{'problem': x['problem'], 'correct': x['correct']}
+        return[{'problem': x['problem'], 'correct': x['correct'], 'unix_s': x['unix_s']}
                for x in self.get_raw_user_skill_data(course_id, skill_name, user_id)
                if x['type'] == 'response' and x['attempt'] == 1]
 

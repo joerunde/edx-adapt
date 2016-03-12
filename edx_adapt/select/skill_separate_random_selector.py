@@ -111,7 +111,7 @@ class SkillSeparateRandomSelector(SelectInterface):
         key = ""
         for mode in self.parameter_access_mode_list:
             if mode in mode_id_map:
-                key += str(mode_id_map[mode]) + " "
+                key += str(mode_id_map[mode])
             else:
                 raise SelectException("Parameter access mode is invalid")
         return key.strip()

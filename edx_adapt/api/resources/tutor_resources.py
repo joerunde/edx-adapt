@@ -10,6 +10,8 @@ from flask_restful import Resource, abort, reqparse
 from edx_adapt.data.interface import DataException
 from edx_adapt.select.interface import SelectException
 
+from edx_adapt.misc import psiturk_with_bo
+
 """ Handle request for user's current and next problem """
 class UserProblems(Resource):
     def __init__(self, **kwargs):
@@ -128,14 +130,19 @@ class UserInteraction(Resource):
             self.repo.post_interaction(course_id, args['problem'], user_id, args['correct'],
                                        args['attempt'], args['unix_seconds'])
 
+            #is the user now done? if so hack in a call to psiturk+bo module
+            if user_id in self.repo.get_finished_users(course_id):
+                psiturk_with_bo.set_next_users_parameters(self.repo, self.selector, course_id)
+
             # the user needs a new problem, start choosing one
             try:
                 print("--------------------\tSTARTING SELECTOR!")
-                t = threading.Thread(target=run_selector, args=(course_id, user_id, self.selector, self.repo))
+                """t = threading.Thread(target=run_selector, args=(course_id, user_id, self.selector, self.repo))
                 t.start()
                 #fuck it, wait up for that bitch here
                 t.join()
-                #TODO: OH HELL NO
+                #TODO: OH HELL NO"""
+                run_selector(course_id, user_id, self.selector, self.repo)
             except Exception as e:
                 print("--------------------\tEXCEPTION STARTING SELECTION THREAD: " + str(e))
                 abort(500, message="Interaction successfully stored, but an error occurred starting "

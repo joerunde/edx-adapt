@@ -33,12 +33,14 @@ mturk_conn = MTurkConnection(**mturkparams)
 def set_next_users_parameters(repo, selector, course_id):
     # pass here if not using BO
     if not USE_PSITURK_AND_BAYESIAN_OPT:
+        print "lol"
         return
     """@type repo: DataInterface """
 
     f = open("turk_logs.txt", "a")
     f.write("\n")
     f.write("Attempting to set next user's parameters for: " + course_id + "\n")
+    print("Attempting to set next user's parameters for: " + course_id + "\n")
 
     try:
         #find current experiment
@@ -52,6 +54,7 @@ def set_next_users_parameters(repo, selector, course_id):
 
         if exp is None:
             f.write("WOAH! No current experiment found for Bayesian Optimization\n")
+            print"WOAH! No current experiment found for Bayesian Optimization\n")
             return
 
         #get list of skills up in this business
@@ -82,10 +85,13 @@ def set_next_users_parameters(repo, selector, course_id):
 
     except DataException as e:
         f.write(str(e) + "\n")
+        print(str(e) + "\n")
     except SelectException as e:
         f.write(str(e) + "\n")
+        print(str(e) + "\n")
     except Exception as e:
         f.write(str(e) + "\n")
+        print(str(e) + "\n")
 
     f.close()
 
@@ -107,6 +113,7 @@ def run_BO(blobs, course_id):
 
     f = open("turk_logs.txt", "a")
     f.write("Successfully spun up run_BO thread\n")
+    print("Successfully spun up run_BO thread\n")
 
     try:
 
@@ -148,6 +155,7 @@ def run_BO(blobs, course_id):
 
     except Exception as e:
         f.write(str(e) + "\n")
+        print(str(e) + "\n")
 
 
 """

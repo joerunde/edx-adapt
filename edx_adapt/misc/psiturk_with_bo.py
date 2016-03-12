@@ -54,7 +54,7 @@ def set_next_users_parameters(repo, selector, course_id):
 
         if exp is None:
             f.write("WOAH! No current experiment found for Bayesian Optimization\n")
-            print"WOAH! No current experiment found for Bayesian Optimization\n")
+            print("WOAH! No current experiment found for Bayesian Optimization\n")
             return
 
         #get list of skills up in this business

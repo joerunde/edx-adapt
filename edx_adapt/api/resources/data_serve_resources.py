@@ -88,9 +88,15 @@ def fill_user_data(repo, course_id, user_id):
     correct = {}
     num_pre = {}
     num_post = {}
+    skillz = {}
 
     data['all'] = repo.get_all_interactions(course_id, user_id)
     correct['all'] = repo.get_whole_trajectory(course_id, user_id)
+
+    correct['pretest'] = [x['correct'] for x in repo.get_all_interactions(course_id, user_id) if x['problem']['pretest']]
+    correct['posttest'] = [x['correct'] for x in repo.get_all_interactions(course_id, user_id) if x['problem']['posttest']]
+    correct['problems'] = [x['correct'] for x in repo.get_all_interactions(course_id, user_id)
+                           if x['problem']['posttest'] == False and x['problem']['pretest'] == False]
 
     data['by_skill'] = {}
     correct['by_skill'] = {}
@@ -101,7 +107,12 @@ def fill_user_data(repo, course_id, user_id):
         num_pre[skill] = repo.get_num_pretest(course_id, skill)
         num_post[skill] = repo.get_num_posttest(course_id, skill)
 
-    blob = {'data':data, 'trajectories':correct, 'pretest_length': num_pre, 'posttest_length': num_post}
+    skillz['pretest'] = [x['problem']['skills'][0] for x in repo.get_all_interactions(course_id, user_id) if x['problem']['pretest']]
+    skillz['posttest'] = [x['problem']['skills'][0] for x in repo.get_all_interactions(course_id, user_id) if x['problem']['posttest']]
+    skillz['problems'] = [x['problem']['skills'][0] for x in repo.get_all_interactions(course_id, user_id)
+                       if x['problem']['posttest'] == False and x['problem']['pretest'] == False]
+
+    blob = {'data': data, 'trajectories': correct, 'trajectory_skills': skillz, 'pretest_length': num_pre, 'posttest_length': num_post}
     return blob
 
 """ Handle request for a user's trajectories """

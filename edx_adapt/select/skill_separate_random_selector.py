@@ -117,6 +117,17 @@ class SkillSeparateRandomSelector(SelectInterface):
         return key.strip()
 
 
+    def get_parameter(self, course_id, user_id = None, skill_name = None):
+        mode_id_map = {"course": course_id, "user": user_id, "skill": skill_name}
+
+        key = ""
+        for mode in self.parameter_access_mode_list:
+            if mode_id_map[mode]:
+                key += mode_id_map[mode]
+            else:
+                raise SelectException("Mode and the arguments do not match")
+        self.data_interface.get(key)
+
     def set_parameter(self, parameter, course_id = None, user_id = None, skill_name = None):
         """
         Set the parameter for the specified course, user, skill (all optional)

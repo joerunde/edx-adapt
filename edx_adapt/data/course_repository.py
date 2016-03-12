@@ -230,7 +230,7 @@ class CourseRepository(interface.DataInterface):
             for d in data:
                 if d['problem']['posttest'] and d['unix_s'] > exp['start_time'] and d['unix_s'] < exp['end_time']:
                     subjects.append(user)
-                    continue
+                    break
         return subjects
 
     def delete_experiment(self, course_id, experiment_name):

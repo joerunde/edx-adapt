@@ -7,6 +7,7 @@ import resources.course_resources as CR
 import resources.tutor_resources as TR
 import resources.data_serve_resources as DR
 import resources.model_resources as MR
+import resources.etc_resources as ER
 # import data and model stuff
 import edx_adapt.data.course_repository as repo
 import edx_adapt.data.tinydb_storage as store
@@ -22,7 +23,7 @@ base = '/api/v1'
 
 database = repo.CourseRepository(store.TinydbStorage('/tmp/2.json'))
 student_model = bkt.BKT()
-selector = select.SkillSeparateRandomSelector(database, student_model)
+selector = select.SkillSeparateRandomSelector(database, student_model, "user skill")
 
 api.add_resource(CR.Courses, base + '/course',
                  resource_class_kwargs={'data': database, 'selector': selector})
@@ -60,6 +61,12 @@ api.add_resource(DR.ExperimentTrajectoryRequest, base + '/data/trajectory/course
 api.add_resource(MR.Parameters, base+'/parameters',
                  resource_class_kwargs={'data': database, 'selector': selector})
 
+api.add_resource(ER.HitID, base+'/misc/hitID',
+                 resource_class_kwargs={'data': database, 'selector': selector})
+api.add_resource(ER.LoadBOParamsForUser, base+'/course/<course_id>/user/<user_id>/LoadBOParams',
+                 resource_class_kwargs={'data': database, 'selector': selector})
+api.add_resource(ER.PostBOParameters, base+'/misc/SetBOParams',
+                 resource_class_kwargs={'data': database, 'selector': selector})
 
 @app.errorhandler(404)  # Return JSON with 404 instead of html
 def page_not_found(e):

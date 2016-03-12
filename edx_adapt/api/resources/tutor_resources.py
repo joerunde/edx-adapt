@@ -132,6 +132,7 @@ class UserInteraction(Resource):
 
             #is the user now done? if so hack in a call to psiturk+bo module
             if user_id in self.repo.get_finished_users(course_id):
+                print "USER IS DONE! ONTO BAYESIAN OPTIMIZATION!"
                 psiturk_with_bo.set_next_users_parameters(self.repo, self.selector, course_id)
 
             # the user needs a new problem, start choosing one

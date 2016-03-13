@@ -32,6 +32,8 @@ class UserProblems(Resource):
             okay = False
 
         done_with_current = False
+        done_with_course = False
+
         if not cur:
             done_with_current = True
         else:
@@ -46,11 +48,15 @@ class UserProblems(Resource):
                     if len([x for x in log if x['type'] == 'response']) > 0:
                         done_with_current = True
 
+                fin = self.repo.get_finished_users(course_id)
+                if user_id in fin:
+                    done_with_course = True
+
             except DataException as e:
                 print("--------------------\tDATA EXCEPTION: " + str(e))
                 abort(500, message=str(e))
 
-        return {"next": nex, "current": cur, "done_with_current": done_with_current, "okay": okay}
+        return {"next": nex, "current": cur, "done_with_current": done_with_current, "okay": okay, "done_with_course": done_with_course}
 
 
 """ Argument parser for posting a user response """
@@ -131,9 +137,11 @@ class UserInteraction(Resource):
                                        args['attempt'], args['unix_seconds'])
 
             #is the user now done? if so hack in a call to psiturk+bo module TODO: do this only once
+            """
             if user_id in self.repo.get_finished_users(course_id):
                 print "USER IS DONE! ONTO BAYESIAN OPTIMIZATION!"
                 psiturk_with_bo.set_next_users_parameters(self.repo, self.selector, course_id)
+            """
 
             # the user needs a new problem, start choosing one
             try:

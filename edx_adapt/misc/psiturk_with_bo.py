@@ -175,7 +175,7 @@ def run_BO(blobs, course_id):
         print str(hit)
         remote_log(HOSTNAME, "mturk_conn.get_hit() returned: " + str(hit))
 
-        if hit.MaxAssignments >= 9:
+        if int(hit.MaxAssignments) >= 9:
             #don't extend more in this case
             f.write("Maximum number of hits reached (" + str(hit.MaxAssignments) + ")\n")
             remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")

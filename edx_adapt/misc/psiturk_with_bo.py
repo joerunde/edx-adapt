@@ -181,8 +181,8 @@ def run_BO(blobs, course_id):
             remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
             return
 
-        if int(hit.NumberOfAssignmentsPending) + int(hit.NumberOfAssignmentsAvailable) > 0:
-            remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + "available), not extending HIT")
+        if int(hit.NumberOfAssignmentsAvailable) > 0:
+            remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + " available), not extending HIT")
             f.write("FUUUUUUUUUUUUUUUUUUUUUUUUUUCK why is there a hit open?\n")
             return
 

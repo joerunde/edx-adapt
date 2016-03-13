@@ -2,6 +2,7 @@
 
 import datetime
 import interface
+import random
 
 class CourseRepository(interface.DataInterface):
 
@@ -259,12 +260,23 @@ class CourseRepository(interface.DataInterface):
     def _get_user_problem_key(self, user_id):
         return user_id + "_cur_next"
 
-    def _get_problem(self, course_id, problem_name):
+    def _get_problem(self, course_id, problem_name, problem_d=None):
         problems = self.store.get(course_id, 'problems')
         problem = [x for x in problems if x['problem_name'] == problem_name]
         if len(problem) == 0:
             raise interface.DataException("Problem not found: {}".format(problem_name))
-        return problem[0]
+
+        random.shuffle(problem) #hack because joe is tired. shouldn't be multiple problems here anyway
+        print "!~@!@!!$!@#$!@#!!!!!!!!!!!!!!!!!"
+        print problem
+
+        pret = problem[0]
+        if problem_d is not None:
+            #the whole problem was actually specified. Check for a match
+            for p in problem:
+                if p == problem_d:
+                    pret = p
+        return pret
 
     def _get_probs_done(self, course_id, user_id):
         log = self.store.get(course_id, self._get_user_log_key(user_id))
@@ -279,6 +291,19 @@ class CourseRepository(interface.DataInterface):
         all = self.store.get(course_id, 'problems')
         done = self._get_probs_done(course_id, user_id)
         remaining = [x for x in all if x not in done]
+
+        """
+        print "!@#$%!@#!@$%!#@$!@$"
+        for x in all:
+            if 'T3_2' in x['problem_name']:
+                print "ALL LIST T3: "
+                print x
+
+        for x in done:
+            if 'T3_2' in x['problem_name']:
+                print "DONE LIST T3: "
+                print x
+        """
         return remaining
 
     def _get_and_assert_problem_exists(self, course_id, problem_dict):

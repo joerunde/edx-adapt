@@ -130,7 +130,7 @@ class UserInteraction(Resource):
             self.repo.post_interaction(course_id, args['problem'], user_id, args['correct'],
                                        args['attempt'], args['unix_seconds'])
 
-            #is the user now done? if so hack in a call to psiturk+bo module
+            #is the user now done? if so hack in a call to psiturk+bo module TODO: do this only once
             if user_id in self.repo.get_finished_users(course_id):
                 print "USER IS DONE! ONTO BAYESIAN OPTIMIZATION!"
                 psiturk_with_bo.set_next_users_parameters(self.repo, self.selector, course_id)

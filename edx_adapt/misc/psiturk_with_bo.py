@@ -7,6 +7,7 @@ import sys, os, time, thread, requests
 import numpy as np
 import cPickle
 import random
+import json
 from boto.mturk.connection import MTurkConnection
 
 from moe.optimal_learning.python import bo_edu
@@ -18,6 +19,7 @@ from edx_adapt.data.interface import DataInterface
 from edx_adapt.data.interface import DataException
 from edx_adapt.select.interface import SelectException
 from edx_adapt.api.resources.data_serve_resources import fill_user_data
+import edx_adapt.api.resources.etc_resources as etc_resources
 
 import SUPER_SECRET_FILE
 
@@ -29,6 +31,10 @@ mturkparams = dict(aws_access_key_id=SUPER_SECRET_FILE.aws_access_key_id,
                    host=host)
 mturk_conn = MTurkConnection(**mturkparams)
 
+headers = {'Content-type': 'application/json'}
+
+#edx_app host
+HOSTNAME = 'cmustats.tk'
 
 def set_next_users_parameters(repo, selector, course_id):
     # pass here if not using BO
@@ -40,6 +46,7 @@ def set_next_users_parameters(repo, selector, course_id):
     f = open("turk_logs.txt", "a")
     f.write("\n")
     f.write("Attempting to set next user's parameters for: " + course_id + "\n")
+    etc_resources.append_to_log("Attempting to set next user's parameters for: " + course_id, repo)
     print("Attempting to set next user's parameters for: " + course_id + "\n")
 
     try:
@@ -53,6 +60,7 @@ def set_next_users_parameters(repo, selector, course_id):
                 exp = e
 
         if exp is None:
+            etc_resources.append_to_log("NO current experiment found for Bayesian Optimization on course: " + course_id + ". Exiting...", repo)
             f.write("WOAH! No current experiment found for Bayesian Optimization\n")
             print("WOAH! No current experiment found for Bayesian Optimization\n")
             return
@@ -67,17 +75,19 @@ def set_next_users_parameters(repo, selector, course_id):
             data_dict = fill_user_data(repo, course_id, user)
             #get the regular trajectory data from data_serve endpoint utility function
             blob = fill_user_data(repo, course_id, user)
-
             #get the model params for this user... (assume doing per-skill params)
             userparams = {}
             for skill in skills:
                 userparams[skill] = selector.get_parameter(course_id, user, skill)
+
                 # calc objective
                 val = skills_performance_objective_32nd(blob['trajectories']['by_skill'][skill], -1, blob['trajectories']['posttest'], blob['trajectory_skills']['posttest'], skill)
                 userparams[skill]['val'] = val
 
             blob['bo_params_and_results'] = userparams
             trajectories.append(blob)
+
+        etc_resources.append_to_log(str(len(users)) + " User trajectories found on course: " + course_id + ", running BO on these now.", repo)
 
         ########## start new thread to run Bayesian Optimization
         # This is important- BO could take a while and the thread running here needs to be serving the REST api
@@ -89,12 +99,16 @@ def set_next_users_parameters(repo, selector, course_id):
     except SelectException as e:
         f.write(str(e) + "\n")
         print(str(e) + "\n")
-    except Exception as e:
-        f.write(str(e) + "\n")
-        print(str(e) + "\n")
+    #except Exception as e:
+        #f.write(str(e) + "\n")
+        #print(str(e) + "\n")
 
     f.close()
 
+
+def remote_log(host, log):
+    response = requests.post('http://'+host+':9000/api/v1/misc/log',
+                                 data=json.dumps({'log':log}), headers=headers)
 
 def run_BO(blobs, course_id):
     #do a little data shuffling here, need a slightly different format than the web api serves
@@ -116,8 +130,7 @@ def run_BO(blobs, course_id):
     print("Successfully spun up run_BO thread\n")
 
     try:
-
-        next_params = bo_edu.next_moe_pts_edu_stateless_boexpt2(traj, params)
+        next_params = bo_edu.next_moe_pts_edu_stateless_boexpt2(traj, params)[0]
 
         idx_to_name = bo_edu.SKILL_ID_TO_SKILL_NAME
 
@@ -127,34 +140,62 @@ def run_BO(blobs, course_id):
             skill = idx_to_name[c]
             x = next_params[c]
             #[pdct["pl"], pdct["pt"], pdct["pg"], pdct["ps"], pdct["th"]]
-            params = {'pi': x[0], 'pt': x[1], 'pg': x[2], 'ps': x[3], 'th': x[4] }
+            params = {'pi': x[0], 'pt': x[1], 'pg': x[2], 'ps': x[3], 'threshold': x[4] }
             tutor_params[skill] = params
 
+        #log the BO result on the server:
+        remote_log(HOSTNAME, "Calculated next parameters with BO: " + json.dumps(tutor_params))
+
         #ping back the server with the new parameters
-        response = requests.post('http://cmustats.tk:9000/api/v1/misc/SetBOParams',
-                                 data={'course_id':course_id, 'parameters': tutor_params})
+        response = requests.post('http://'+HOSTNAME+':9000/api/v1/misc/SetBOParams',
+                                 data=json.dumps({'course_id':course_id, 'parameters': tutor_params}), headers=headers)
+        remote_log(HOSTNAME, "Sent parameters to server, server responded with: " + str(response.json()))
         f.write(str(response.json()) + "\n")
 
         # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
-        response = requests.get('http://cmustats.tk:9000/api/v1/misc/hitID')
-        hitid = response.json()['hitid']
-        f.write(str(response.json()) + "\n")
+        response = requests.get('http://'+HOSTNAME+':9000/api/v1/misc/hitID')
+        hitid = ''
+        try:
+            hitid = response.json()['hitid']
+        except Exception as e:
+            remote_log(HOSTNAME, "Server error getting response from /hitID. Maybe no HIT ID set? Exiting loop.")
+            return
 
-        assignment_list = mturk_conn.get_assignments(hitid)
-        hit, = mturk_conn.get_hit(hitid, ['HITDetail', 'HITAssignmentSummary'])
+        f.write(str(response.json()) + "\n")
+        remote_log(HOSTNAME, "Received HIT ID from server: " + hitid)
+
+        #assignment_list = mturk_conn.get_assignments(hitid)
+        hit = None
+        try:
+            hit, = mturk_conn.get_hit(hitid, ['HITDetail', 'HITAssignmentSummary'])
+        except Exception as e:
+            remote_log(HOSTNAME, "Error retrieving HIT from mturk, exiting loop: " + str(e))
+            return
+
+        print str(hit)
+        remote_log(HOSTNAME, "mturk_conn.get_hit() returned: " + str(hit))
 
         if hit.MaxAssignments >= 9:
             #don't extend more in this case
             f.write("Maximum number of hits reached (" + str(hit.MaxAssignments) + ")\n")
+            remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
             return
 
         if int(hit.NumberOfAssignmentsPending) + int(hit.NumberOfAssignmentsAvailable) > 0:
-            f.write("FUUUUUUUUUUUUUUUUUUUUUUUUUUCK why is there a hit open?\nlol oh well\n")
+            remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + "available), not extending HIT")
+            f.write("FUUUUUUUUUUUUUUUUUUUUUUUUUUCK why is there a hit open?\n")
+            return
 
-        mturk_conn.extend_hit(hitid, assignments_increment=1, expiration_increment=3600 * 3)
+        try:
+            r = mturk_conn.extend_hit(hitid, assignments_increment=1, expiration_increment=3600 * 3)
+            print str(r)
+            remote_log(HOSTNAME, "mturk_conn.extend_hit() returned: " + str(r))
+        except Exception as e:
+            remote_log(HOSTNAME, "Exception extending hit, loop failed: " + str(e))
 
     except Exception as e:
         f.write(str(e) + "\n")
+        remote_log(HOSTNAME, "some other random exception in the loop happened?: " + str(e))
         print(str(e) + "\n")
 
 

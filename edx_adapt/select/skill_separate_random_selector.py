@@ -59,6 +59,16 @@ class SkillSeparateRandomSelector(SelectInterface):
             if len(pretest_problems) > 0:
                 return sorted(pretest_problems, key=lambda k: k['problem_name'])[0]
 
+            #if the user has started the post-test, finish it
+            if len( [x for x in self.data_interface.get_all_interactions(course_id, user_id) if x['problem']['posttest']]) > 0:
+                post = self.data_interface.get_all_remaining_posttest_problems(course_id, user_id)
+                if len(post) == 0:
+                    return {'congratulations': True, 'done': True}
+                return post[0]
+
+            print "doop doop"
+            print
+
             candidate_problem_list = [] # List of problems to choose from
             for skill_name in self.data_interface.get_skills(course_id): # For each skill
                 # Gets the parameters corresponding to the course, user, skill - parameter set must include "threshold"
@@ -70,6 +80,8 @@ class SkillSeparateRandomSelector(SelectInterface):
                 )
                 # If the probability is less than threshold, add the problems to candidate list
                 if prob_correct < skill_parameter['threshold']:
+                    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~ " + skill_name + " UNDER THRESHOLD! "
+                    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~ adding candidates: " + str(self.data_interface.get_remaining_problems(course_id, skill_name, user_id))
                     candidate_problem_list.extend(self.data_interface.get_remaining_problems(course_id, skill_name, user_id))
 
             if candidate_problem_list: # If candidate list is not empty, randomly choose one from it
@@ -126,7 +138,7 @@ class SkillSeparateRandomSelector(SelectInterface):
                 key += mode_id_map[mode]
             else:
                 raise SelectException("Mode and the arguments do not match")
-        self.data_interface.get(key)
+        return self.data_interface.get(key)
 
     def set_parameter(self, parameter, course_id = None, user_id = None, skill_name = None):
         """

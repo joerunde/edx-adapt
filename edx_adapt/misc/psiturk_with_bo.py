@@ -187,7 +187,10 @@ def run_BO(blobs, course_id):
             return
 
         try:
-            r = mturk_conn.extend_hit(hitid, assignments_increment=1, expiration_increment=3600 * 3)
+            r = mturk_conn.extend_hit(hitid, assignments_increment=1)
+            print str(r)
+            remote_log(HOSTNAME, "mturk_conn.extend_hit() returned: " + str(r))
+            r = mturk_conn.extend_hit(hitid, expiration_increment=3600 * 3)
             print str(r)
             remote_log(HOSTNAME, "mturk_conn.extend_hit() returned: " + str(r))
         except Exception as e:

@@ -22,6 +22,7 @@ class PostBOParameters(Resource):
         args = bo_parser.parse_args()
         try:
             self.repo.set('NEXT_BO_PARAMS_' + args['course_id'], args['parameters'])
+            self.repo.set('NEXT_BO_PARAMS_USERS_' + args['course_id'], [])
         except DataException as e:
             abort(500, message=str(e))
 
@@ -36,10 +37,21 @@ class LoadBOParamsForUser(Resource):
 
     def get(self, course_id, user_id):
         try:
+            #was anybody else using these?
+            prev_users = self.repo.get('NEXT_BO_PARAMS_USERS_' + course_id)
+            if len(prev_users) > 0:
+                fin = self.repo.get_finished_users(course_id)
+                for user in prev_users:
+                    if user in fin:
+                        append_to_log("CRAP! BIG ERROR! " + user_id + " IS REUSING THE SAME PARAMETERS AS "
+                                      + user + "!", self.repo)
+            prev_users.append(user_id)
+            self.repo.set('NEXT_BO_PARAMS_USERS_' + course_id, prev_users)
+
             params = self.repo.get('NEXT_BO_PARAMS_' + course_id)
             for skill, param in params.iteritems():
                 self.selector.set_parameter(param, course_id, user_id, skill)
-            self.repo.set('NEXT_BO_PARAMS_' + course_id, None)
+
         except SelectException as e:
             abort(500, message=str(e))
         except DataException as e:
@@ -76,7 +88,6 @@ class HitID(Resource):
             abort(500, message=str(e))
         return {'hitid': hitid}, 200
 
-
 #Because I'm lazy and want to just type in a hitID in a browser without using url params or specifying a post
 class EZHitIDSetter(Resource):
     def __init__(self, **kwargs):
@@ -89,8 +100,6 @@ class EZHitIDSetter(Resource):
         # This is really a post
         self.repo.set("__HITID__", hitid)
         return {'success': True}
-
-
 
 log_parser = reqparse.RequestParser()
 log_parser.add_argument('log', type=str, required=True, location='json', help="Please supply something to log")
@@ -128,7 +137,6 @@ class LoopLog(Resource):
         except DataException as e:
             abort(500, message=str(e))
         return Response(log, mimetype="text/html")
-
 
 class ClearLog(Resource):
     def __init__(self, **kwargs):

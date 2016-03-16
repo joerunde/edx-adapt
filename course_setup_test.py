@@ -48,6 +48,7 @@ for k,v in skill2index.iteritems():
     r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101/skill', data=payload, headers=headers)
     print str(r) + str(r.json())
 
+"""
 f = open('../course-content/old_new_map.json', 'r')
 old_new = json.loads(f.readline())
 
@@ -91,6 +92,25 @@ with open("../data/BKT/skills_test.csv", "r") as fin:
 
         r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101', data=json.dumps(payload), headers=headers)
         print str(r) + str(r.json())
+"""
+
+table = [line.strip().split('\t') for line in open("problist.tsv").readlines()]
+
+for row in table:
+    pname = row[0]
+    skill = row[1]
+    url = 'http://cmustats.tk/courses/CMU/STAT101/2014_T1/courseware/statistics/'+pname
+    pre = False
+    post = False
+
+    if "Pre_a" in pname:
+        pre = True
+    if "Post_a" in pname:
+        post = True
+
+    payload = {'problem_name': pname, 'tutor_url': url, 'skills': [skill], 'pretest': pre, 'posttest': post}
+    r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101', data=json.dumps(payload), headers=headers)
+    print str(r) + str(r.json())
 
 
 payload = json.dumps({'experiment_name':'test_experiment', 'start_time':0, 'end_time':1999999999})

@@ -57,17 +57,28 @@ class SkillSeparateRandomSelector(SelectInterface):
             #if pretest problems are left, give the next one
             pretest_problems = self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)
             if len(pretest_problems) > 0:
-                return sorted(pretest_problems, key=lambda k: k['problem_name'])[0]
+                for id in [3,7,1,6,10,12,5,8,9,11,4,0,2]:
+                    prob = 'Pre_assessment_'+str(id)
+                    for pre_prob in pretest_problems:
+                        if pre_prob['problem_name'] == prob:
+                            return pre_prob
+                print "This should never print"
+                #return sorted(pretest_problems, key=lambda k: k['problem_name'])[0]
 
             #if the user has started the post-test, finish it
             if len( [x for x in self.data_interface.get_all_interactions(course_id, user_id) if x['problem']['posttest']]) > 0:
                 post = self.data_interface.get_all_remaining_posttest_problems(course_id, user_id)
+                if len(post) > 0:
+                    for id in [3,7,1,6,10,12,5,8,9,11,4,0,2]:
+                        prob = 'Post_assessment_'+str(id)
+                        for post_prob in post:
+                            if post_prob['problem_name'] == prob:
+                                return post_prob
+                    print "This should never print"
+
                 if len(post) == 0:
                     return {'congratulations': True, 'done': True}
                 return post[0]
-
-            print "doop doop"
-            print
 
             candidate_problem_list = [] # List of problems to choose from
             for skill_name in self.data_interface.get_skills(course_id): # For each skill
@@ -106,7 +117,10 @@ class SkillSeparateRandomSelector(SelectInterface):
         :return: the first problem to give to the user
         """
         pretest = self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)
-        return sorted(pretest, key=lambda k: k['problem_name'])[0]
+        for prob in pretest:
+            if prob['problem_name'] == 'Pre_assessment_3':
+                return prob
+        #return sorted(pretest, key=lambda k: k['problem_name'])[0]
 
 
     def _get_key(self, course_id, user_id, skill_name):

@@ -74,6 +74,8 @@ def set_next_users_parameters(repo, selector, course_id):
             #get the model params for this user... (assume doing per-skill params)
             userparams = {}
             for skill in skills:
+                if skill == 'None':
+                    continue
                 userparams[skill] = selector.get_parameter(course_id, user, skill)
 
                 # calc objective

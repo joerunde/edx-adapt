@@ -51,6 +51,10 @@ class UserProblems(Resource):
                 fin = self.repo.get_finished_users(course_id)
                 if user_id in fin:
                     done_with_course = True
+                #reject high pretest scores
+                if sum([x['correct'] for x in self.repo.get_all_interactions(course_id, user_id) if x['problem']['pretest']]) > 7:
+                    done_with_course = True
+                    nex = None
 
             except DataException as e:
                 print("--------------------\tDATA EXCEPTION: " + str(e))
@@ -148,9 +152,8 @@ class UserInteraction(Resource):
                 print("--------------------\tSTARTING SELECTOR!")
                 """t = threading.Thread(target=run_selector, args=(course_id, user_id, self.selector, self.repo))
                 t.start()
-                #fuck it, wait up for that bitch here
                 t.join()
-                #TODO: OH HELL NO"""
+                #TODO: actually run in other thread """
                 run_selector(course_id, user_id, self.selector, self.repo)
             except Exception as e:
                 print("--------------------\tEXCEPTION STARTING SELECTION THREAD: " + str(e))

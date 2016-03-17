@@ -65,7 +65,10 @@ class CourseRepository(interface.DataInterface):
         return list(courses)
 
     def get_skills(self, course_id):
-        return self.store.get(course_id, 'skills')
+        skills = self.store.get(course_id, 'skills')
+        #if 'None' in skills:
+        #    skills.remove('None')
+        return skills
 
     def get_problems(self, course_id, skill_name=None):
         """ Get all problems related to this course-skill pair:, pretest, normal, and posttest """

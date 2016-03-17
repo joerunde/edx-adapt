@@ -45,6 +45,29 @@ class SkillSeparateRandomSelector(SelectInterface):
                 raise SelectException("Parameter access mode is invalid")
 
 
+    def get_p_list(self, namelist, course, user):
+        probs = self.data_interface.get_problems(course)
+        prob_list = []
+        for name in namelist:
+            prob_list.extend([x for x in probs if x['problem_name'] == name])
+        done = self.data_interface.get_all_interactions(course, user)
+        for p in done:
+            if p['problem'] in prob_list:
+                prob_list.remove(p['problem'])
+        new_prob_list = []
+        for prob in prob_list:
+            skill = prob['skills'][0]
+            skill_parameter = self.data_interface.get(self._get_key(course, user, skill))
+            prob_mastery = self.model_interface.get_probability_correct(
+                self.data_interface.get_skill_trajectory(course, skill, user), # trajectory of correctness
+                skill_parameter # parameters for the skill
+            )
+            # If the probability is less than threshold, add the problems to candidate list
+            if prob_mastery < skill_parameter['threshold']:
+                new_prob_list.append(prob)
+        return new_prob_list
+
+
     def choose_next_problem(self, course_id, user_id):
         """
         Choose the next problem to give to the user
@@ -65,6 +88,22 @@ class SkillSeparateRandomSelector(SelectInterface):
                 print "This should never print"
                 #return sorted(pretest_problems, key=lambda k: k['problem_name'])[0]
 
+            #Do the first 3 baseline problems (if model says to)
+            for prob in self.get_p_list(['b3','b_4','b_3_2_0'], course_id, user_id):
+                return prob
+            #Do the next 2 problems always
+            p_done = self.data_interface.get_all_interactions(course_id, user_id)
+            p_all = self.data_interface.get_problems(course_id)
+            for prob in ['labels_we', 'skew_easy_0']:
+                give = True
+                for p in p_done:
+                    if p['problem']['problem_name'] == prob:
+                        give = False
+                if give:
+                    ret = [x for x in p_all if x['problem_name'] == prob]
+                    if len(ret) > 0:
+                        return ret[0]
+
             #if the user has started the post-test, finish it
             if len( [x for x in self.data_interface.get_all_interactions(course_id, user_id) if x['problem']['posttest']]) > 0:
                 post = self.data_interface.get_all_remaining_posttest_problems(course_id, user_id)
@@ -84,8 +123,7 @@ class SkillSeparateRandomSelector(SelectInterface):
             for skill_name in self.data_interface.get_skills(course_id): # For each skill
                 # Gets the parameters corresponding to the course, user, skill - parameter set must include "threshold"
                 skill_parameter = self.data_interface.get(self._get_key(course_id, user_id, skill_name))
-                prob_correct = self.model_interface.get_probability_correct(
-                    self.data_interface.get_num_pretest(course_id, skill_name), # number of pre-test problems on the skill
+                prob_correct = self.model_interface.get_probability_mastered(
                     self.data_interface.get_skill_trajectory(course_id, skill_name, user_id), # trajectory of correctness
                     skill_parameter # parameters for the skill
                 )

@@ -48,6 +48,10 @@ for k,v in skill2index.iteritems():
     r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101/skill', data=payload, headers=headers)
     print str(r) + str(r.json())
 
+payload = json.dumps({'skill_name':"None"})
+r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101/skill', data=payload, headers=headers)
+print str(r) + str(r.json())
+
 """
 f = open('../course-content/old_new_map.json', 'r')
 old_new = json.loads(f.readline())

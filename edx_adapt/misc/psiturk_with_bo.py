@@ -43,9 +43,6 @@ def set_next_users_parameters(repo, selector, course_id):
         return
     """@type repo: DataInterface """
 
-    f = open("turk_logs.txt", "a")
-    f.write("\n")
-    f.write("Attempting to set next user's parameters for: " + course_id + "\n")
     etc_resources.append_to_log("Attempting to set next user's parameters for: " + course_id, repo)
     print("Attempting to set next user's parameters for: " + course_id + "\n")
 
@@ -61,7 +58,6 @@ def set_next_users_parameters(repo, selector, course_id):
 
         if exp is None:
             etc_resources.append_to_log("NO current experiment found for Bayesian Optimization on course: " + course_id + ". Exiting...", repo)
-            f.write("WOAH! No current experiment found for Bayesian Optimization\n")
             print("WOAH! No current experiment found for Bayesian Optimization\n")
             return
 
@@ -94,16 +90,12 @@ def set_next_users_parameters(repo, selector, course_id):
         thread.start_new_thread(run_BO, (trajectories, course_id))
 
     except DataException as e:
-        f.write(str(e) + "\n")
         print(str(e) + "\n")
     except SelectException as e:
-        f.write(str(e) + "\n")
         print(str(e) + "\n")
-    #except Exception as e:
-        #f.write(str(e) + "\n")
-        #print(str(e) + "\n")
-
-    f.close()
+    except Exception as e:
+        etc_resources.append_to_log("Crud. Some uncaught exception happened: " + str(e), repo)
+        raise e
 
 
 def remote_log(host, log):
@@ -128,6 +120,7 @@ def run_BO(blobs, course_id):
     f = open("turk_logs.txt", "a")
     f.write("Successfully spun up run_BO thread\n")
     print("Successfully spun up run_BO thread\n")
+    print params
 
     try:
         next_params = bo_edu.next_moe_pts_edu_stateless_boexpt2(traj, params)[0]
@@ -199,4 +192,5 @@ def run_BO(blobs, course_id):
     except Exception as e:
         f.write(str(e) + "\n")
         remote_log(HOSTNAME, "some other random exception in the loop happened?: " + str(e))
+        print "gg, BO broke."
         print(str(e) + "\n")

@@ -13,7 +13,7 @@ print str(r) + str(r.json())
 
 # give no problems (hopefully)
 p = {'pg': 0.25, 'ps': 0.25, 'pi': 0.99, 'pt': 0.5, 'threshold':0.5}
-skills = ['center', 'shape', 'spread', 'x axis', 'y axis', 'h to d', 'd to h', 'histogram']
+skills = ['center', 'shape', 'spread', 'x axis', 'y axis', 'h to d', 'd to h', 'histogram', 'None']
 
 for skill in skills:
     payload = json.dumps({'course_id':'CMUSTAT101', 'params': p, 'user_id':user, 'skill_name':skill})

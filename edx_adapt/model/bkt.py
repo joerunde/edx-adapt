@@ -10,6 +10,12 @@ class BKT(ModelInterface):
 
     alpha = [0, 0] # Forward probability vector
 
+    def get_probability_mastered(self, trajectory, parameters):
+        self.initialize_probability(parameters, 0, 0)
+        for i in xrange(0, len(trajectory)):
+            self.update_probability(parameters, trajectory[i])
+        return self.alpha[1] / (self.alpha[0] + self.alpha[1])
+
     def get_probability_correct(self, num_pretest, trajectory, parameters):
         """
         Get the probability of getting the next problem correct according to the student model
@@ -25,7 +31,7 @@ class BKT(ModelInterface):
             pretest_score += trajectory[i]
 
         self.initialize_probability(parameters, pretest_score, num_pretest)
-        for i in xrange(num_pretest + 1, len(trajectory)):
+        for i in xrange(num_pretest, len(trajectory)):
             self.update_probability(parameters, trajectory[i])
         return self.get_current_probability_correct(parameters)
 

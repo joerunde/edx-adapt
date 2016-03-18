@@ -50,10 +50,16 @@ class SkillSeparateRandomSelector(SelectInterface):
         prob_list = []
         for name in namelist:
             prob_list.extend([x for x in probs if x['problem_name'] == name])
+        print "_________________________1"
+        print prob_list
+
         done = self.data_interface.get_all_interactions(course, user)
         for p in done:
             if p['problem'] in prob_list:
                 prob_list.remove(p['problem'])
+        print "_________________________2"
+        print prob_list
+
         new_prob_list = []
         for prob in prob_list:
             skill = prob['skills'][0]
@@ -62,6 +68,7 @@ class SkillSeparateRandomSelector(SelectInterface):
                 self.data_interface.get_skill_trajectory(course, skill, user), # trajectory of correctness
                 skill_parameter # parameters for the skill
             )
+            print "threshold",skill_parameter['threshold'],'prob mastery',prob_mastery
             # If the probability is less than threshold, add the problems to candidate list
             if prob_mastery < skill_parameter['threshold']:
                 new_prob_list.append(prob)

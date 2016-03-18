@@ -50,21 +50,17 @@ class SkillSeparateRandomSelector(SelectInterface):
         prob_list = []
         for name in namelist:
             prob_list.extend([x for x in probs if x['problem_name'] == name])
-        print "_________________________1"
-        print prob_list
 
         done = self.data_interface.get_all_interactions(course, user)
         for p in done:
             if p['problem'] in prob_list:
                 prob_list.remove(p['problem'])
-        print "_________________________2"
-        print prob_list
 
         new_prob_list = []
         for prob in prob_list:
             skill = prob['skills'][0]
             skill_parameter = self.data_interface.get(self._get_key(course, user, skill))
-            prob_mastery = self.model_interface.get_probability_correct(
+            prob_mastery = self.model_interface.get_probability_mastered(
                 self.data_interface.get_skill_trajectory(course, skill, user), # trajectory of correctness
                 skill_parameter # parameters for the skill
             )
@@ -96,7 +92,7 @@ class SkillSeparateRandomSelector(SelectInterface):
                 #return sorted(pretest_problems, key=lambda k: k['problem_name'])[0]
 
             #Do the first 3 baseline problems (if model says to)
-            for prob in self.get_p_list(['b3','b_4','b_3_2_0'], course_id, user_id):
+            for prob in self.get_p_list(['b3','b4','b3_2_0'], course_id, user_id):
                 return prob
             #Do the next 2 problems always
             p_done = self.data_interface.get_all_interactions(course_id, user_id)

@@ -11,8 +11,8 @@ payload = json.dumps({'user_id':user})
 r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101/user', data=payload, headers=headers)
 print str(r) + str(r.json())
 
-# give no problems (hopefully)
-p = {'pg': 0.25, 'ps': 0.25, 'pi': 0.99, 'pt': 0.5, 'threshold':0.5}
+# give some problems
+p = {'pg': 0.25, 'ps': 0.25, 'pi': 0.1, 'pt': 0.5, 'threshold':0.99}
 skills = ['center', 'shape', 'spread', 'x axis', 'y axis', 'h to d', 'd to h', 'histogram', 'None']
 
 for skill in skills:

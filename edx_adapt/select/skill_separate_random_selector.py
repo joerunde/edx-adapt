@@ -121,6 +121,8 @@ class SkillSeparateRandomSelector(SelectInterface):
 
             candidate_problem_list = [] # List of problems to choose from
             for skill_name in self.data_interface.get_skills(course_id): # For each skill
+                if skill_name == 'None':
+                    continue
                 # Gets the parameters corresponding to the course, user, skill - parameter set must include "threshold"
                 skill_parameter = self.data_interface.get(self._get_key(course_id, user_id, skill_name))
                 prob_correct = self.model_interface.get_probability_mastered(

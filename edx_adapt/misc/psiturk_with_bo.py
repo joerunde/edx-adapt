@@ -38,10 +38,9 @@ HOSTNAME = 'cmustats.tk'
 
 def psiturk_hit_check(repo):
     # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
-    response = requests.get('http://'+HOSTNAME+':9000/api/v1/misc/hitID')
     hitid = ''
     try:
-        hitid = response.json()['hitid']
+        hitid = repo.get("__HITID__")
     except Exception as e:
         return False
 
@@ -197,7 +196,6 @@ def run_BO(blobs, course_id):
 
         if int(hit.NumberOfAssignmentsAvailable) > 0:
             remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + " available), not extending HIT")
-            f.write("FUUUUUUUUUUUUUUUUUUUUUUUUUUCK why is there a hit open?\n")
             return
 
         try:

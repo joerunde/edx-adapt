@@ -43,27 +43,19 @@ def psiturk_hit_check(repo):
     try:
         hitid = response.json()['hitid']
     except Exception as e:
-        remote_log(HOSTNAME, "Server error getting response from /hitID. Maybe no HIT ID set?")
         return False
-
-    remote_log(HOSTNAME, "Received HIT ID from server: " + hitid)
 
     hit = None
     try:
         hit, = mturk_conn.get_hit(hitid, ['HITDetail', 'HITAssignmentSummary'])
     except Exception as e:
-        remote_log(HOSTNAME, "Error retrieving HIT from mturk, exiting loop: " + str(e))
         return False
-
-    remote_log(HOSTNAME, "mturk_conn.get_hit() returned: " + str(hit))
 
     if int(hit.MaxAssignments) >= 9:
         #don't extend more in this case
-        remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
         return False
 
     if int(hit.NumberOfAssignmentsAvailable) > 0:
-        remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + " available), not extending HIT")
         return False
 
     return True

@@ -155,7 +155,7 @@ class HitChecker5000(Resource):
         self.selector = kwargs['selector']
 
     def get(self, course_id):
-        extend = edx_adapt.misc.psiturk_hit_check(self.repo)
+        extend = edx_adapt.misc.psiturk_with_bo.psiturk_hit_check(self.repo)
         if extend:
             edx_adapt.misc.psiturk_with_bo.set_next_users_parameters(self.repo, self.selector, course_id)
             return {'message': 'starting...'}, 200

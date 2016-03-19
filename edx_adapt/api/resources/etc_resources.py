@@ -149,6 +149,18 @@ class ClearLog(Resource):
             abort(500, message=str(e))
         return {'success': True}, 200
 
+class HitChecker5000(Resource):
+    def __init__(self, **kwargs):
+        self.repo = kwargs['data']
+        self.selector = kwargs['selector']
+
+    def get(self, course_id):
+        extend = edx_adapt.misc.psiturk_hit_check(self.repo)
+        if extend:
+            edx_adapt.misc.psiturk_with_bo.set_next_users_parameters(self.repo, self.selector, course_id)
+            return {'message': 'starting...'}, 200
+        return {'message': 'no hit extend needed.'}, 200
+
 
 
 #endpoint for admins to hit to start up another BO+Turk loop if things go sideways (as they're want to do)

@@ -73,6 +73,8 @@ api.add_resource(ER.LoopLog, base+'/misc/log',
                  resource_class_kwargs={'data': database, 'selector': selector})
 api.add_resource(ER.LoopRunner, base+'/misc/start/course/<course_id>',
                  resource_class_kwargs={'data': database, 'selector': selector})
+api.add_resource(ER.HitChecker5000, base+'/misc/hitcheck/course/<course_id>',
+                 resource_class_kwargs={'data': database, 'selector': selector})
 api.add_resource(ER.ClearLog, base+'/misc/log/clear',
                  resource_class_kwargs={'data': database, 'selector': selector})
 

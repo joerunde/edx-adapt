@@ -36,6 +36,38 @@ headers = {'Content-type': 'application/json'}
 #edx_app host
 HOSTNAME = 'cmustats.tk'
 
+def psiturk_hit_check(repo):
+    # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
+    response = requests.get('http://'+HOSTNAME+':9000/api/v1/misc/hitID')
+    hitid = ''
+    try:
+        hitid = response.json()['hitid']
+    except Exception as e:
+        remote_log(HOSTNAME, "Server error getting response from /hitID. Maybe no HIT ID set?")
+        return False
+
+    remote_log(HOSTNAME, "Received HIT ID from server: " + hitid)
+
+    hit = None
+    try:
+        hit, = mturk_conn.get_hit(hitid, ['HITDetail', 'HITAssignmentSummary'])
+    except Exception as e:
+        remote_log(HOSTNAME, "Error retrieving HIT from mturk, exiting loop: " + str(e))
+        return False
+
+    remote_log(HOSTNAME, "mturk_conn.get_hit() returned: " + str(hit))
+
+    if int(hit.MaxAssignments) >= 9:
+        #don't extend more in this case
+        remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
+        return False
+
+    if int(hit.NumberOfAssignmentsAvailable) > 0:
+        remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + " available), not extending HIT")
+        return False
+
+    return True
+
 def set_next_users_parameters(repo, selector, course_id):
     # pass here if not using BO
     if not USE_PSITURK_AND_BAYESIAN_OPT:
@@ -119,8 +151,6 @@ def run_BO(blobs, course_id):
             blob['bo_params_and_results'][k]['th'] = v['threshold']
         params.append(blob['bo_params_and_results'])
 
-    f = open("turk_logs.txt", "a")
-    f.write("Successfully spun up run_BO thread\n")
     print("Successfully spun up run_BO thread\n")
     print params
 
@@ -145,7 +175,6 @@ def run_BO(blobs, course_id):
         response = requests.post('http://'+HOSTNAME+':9000/api/v1/misc/SetBOParams',
                                  data=json.dumps({'course_id':course_id, 'parameters': tutor_params}), headers=headers)
         remote_log(HOSTNAME, "Sent parameters to server, server responded with: " + str(response.json()))
-        f.write(str(response.json()) + "\n")
 
         # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
         response = requests.get('http://'+HOSTNAME+':9000/api/v1/misc/hitID')
@@ -156,7 +185,6 @@ def run_BO(blobs, course_id):
             remote_log(HOSTNAME, "Server error getting response from /hitID. Maybe no HIT ID set? Exiting loop.")
             return
 
-        f.write(str(response.json()) + "\n")
         remote_log(HOSTNAME, "Received HIT ID from server: " + hitid)
 
         #assignment_list = mturk_conn.get_assignments(hitid)
@@ -172,7 +200,6 @@ def run_BO(blobs, course_id):
 
         if int(hit.MaxAssignments) >= 9:
             #don't extend more in this case
-            f.write("Maximum number of hits reached (" + str(hit.MaxAssignments) + ")\n")
             remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
             return
 
@@ -192,7 +219,6 @@ def run_BO(blobs, course_id):
             remote_log(HOSTNAME, "Exception extending hit, loop failed: " + str(e))
 
     except Exception as e:
-        f.write(str(e) + "\n")
         remote_log(HOSTNAME, "some other random exception in the loop happened?: " + str(e))
         print "gg, BO broke."
         print(str(e) + "\n")

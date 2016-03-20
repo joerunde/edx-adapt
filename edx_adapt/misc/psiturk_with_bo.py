@@ -4,6 +4,7 @@
 USE_PSITURK_AND_BAYESIAN_OPT = True
 
 import sys, os, time, thread, requests
+import traceback
 import numpy as np
 import cPickle
 import random
@@ -59,6 +60,41 @@ def psiturk_hit_check(repo):
 
     return True
 
+
+def get_blobs_with_params(repo, selector, course, users, skills):
+    trajectories = []
+    for user in users:
+        #get the regular trajectory data from data_serve endpoint utility function
+        blob = fill_user_data(repo, course, user)
+        #get the model params for this user... (assume doing per-skill params)
+        userparams = {}
+        for skill in skills:
+            if skill == 'None':
+                continue
+            userparams[skill] = selector.get_parameter(course, user, skill)
+            # calc objective
+            val = skills_performance_objective_32nd(blob['trajectories']['by_skill'][skill], -1, blob['trajectories']['posttest'], blob['trajectory_skills']['posttest'], skill)
+            userparams[skill]['val'] = val
+
+        blob['bo_params_and_results'] = userparams
+        trajectories.append(blob)
+    return trajectories
+
+def transform_blobs_for_BO(blobs):
+    traj = []
+    params = []
+    for blob in blobs:
+        # !!!!!!!!!! pre and post test need to have been given in same order
+        blob['trajectories']['test_skills'] = blob['trajectory_skills']['pretest']
+        blob['trajectories']['problems_skills'] = blob['trajectory_skills']['problems']
+        traj.append(blob['trajectories'])
+        for k, v in blob['bo_params_and_results'].iteritems():
+            blob['bo_params_and_results'][k]['pl'] = v['pi']
+            blob['bo_params_and_results'][k]['th'] = v['threshold']
+        params.append(blob['bo_params_and_results'])
+
+    return traj, params
+
 def set_next_users_parameters(repo, selector, course_id):
     # pass here if not using BO
     if not USE_PSITURK_AND_BAYESIAN_OPT:
@@ -86,29 +122,15 @@ def set_next_users_parameters(repo, selector, course_id):
 
         #get list of skills up in this business
         skills = repo.get_skills(course_id)
+        if 'None' in skills:
+            skills.remove('None')
+
+        users = repo.get_subjects(course_id, exp['experiment_name'])
 
         #get trajectories
-        trajectories = []
-        users = repo.get_subjects(course_id, exp['experiment_name'])
-        for user in users:
-            data_dict = fill_user_data(repo, course_id, user)
-            #get the regular trajectory data from data_serve endpoint utility function
-            blob = fill_user_data(repo, course_id, user)
-            #get the model params for this user... (assume doing per-skill params)
-            userparams = {}
-            for skill in skills:
-                if skill == 'None':
-                    continue
-                userparams[skill] = selector.get_parameter(course_id, user, skill)
-
-                # calc objective
-                val = skills_performance_objective_32nd(blob['trajectories']['by_skill'][skill], -1, blob['trajectories']['posttest'], blob['trajectory_skills']['posttest'], skill)
-                userparams[skill]['val'] = val
-
-            blob['bo_params_and_results'] = userparams
-            trajectories.append(blob)
-
+        trajectories = get_blobs_with_params(repo, selector, course_id, users, skills)
         etc_resources.append_to_log(str(len(users)) + " User trajectories found on course: " + course_id + ", running BO on these now.", repo)
+
 
         ########## start new thread to run Bayesian Optimization
         # This is important- BO could take a while and the thread running here needs to be serving the REST api
@@ -129,23 +151,16 @@ def remote_log(host, log):
 
 def run_BO(blobs, course_id):
     #do a little data shuffling here, need a slightly different format than the web api serves
-    traj = []
-    params = []
-
-    for blob in blobs:
-        # !!!!!!!!!! pre and post test need to have been given in same order
-        blob['trajectories']['test_skills'] = blob['trajectory_skills']['pretest']
-        blob['trajectories']['problems_skills'] = blob['trajectory_skills']['problems']
-        traj.append(blob['trajectories'])
-        for k, v in blob['bo_params_and_results'].iteritems():
-            blob['bo_params_and_results'][k]['pl'] = v['pi']
-            blob['bo_params_and_results'][k]['th'] = v['threshold']
-        params.append(blob['bo_params_and_results'])
+    traj, params = transform_blobs_for_BO(blobs)
 
     print("Successfully spun up run_BO thread\n")
     print params
 
     try:
+        print traj
+
+        print params
+
         next_params = bo_edu.next_moe_pts_edu_stateless_boexpt2(traj, params)[0]
 
         idx_to_name = bo_edu.SKILL_ID_TO_SKILL_NAME
@@ -212,3 +227,5 @@ def run_BO(blobs, course_id):
         remote_log(HOSTNAME, "some other random exception in the loop happened?: " + str(e))
         print "gg, BO broke."
         print(str(e) + "\n")
+        print traceback.format_exc()
+        raise e

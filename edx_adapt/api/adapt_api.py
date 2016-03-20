@@ -77,6 +77,8 @@ api.add_resource(ER.HitChecker5000, base+'/misc/hitcheck/course/<course_id>',
                  resource_class_kwargs={'data': database, 'selector': selector})
 api.add_resource(ER.ClearLog, base+'/misc/log/clear',
                  resource_class_kwargs={'data': database, 'selector': selector})
+api.add_resource(ER.BOPoints, base+'/course/<course_id>/BOPoints',
+                 resource_class_kwargs={'data': database, 'selector': selector})
 
 @app.errorhandler(404)  # Return JSON with 404 instead of html
 def page_not_found(e):

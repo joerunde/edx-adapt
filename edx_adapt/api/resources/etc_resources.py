@@ -161,6 +161,39 @@ class HitChecker5000(Resource):
             return {'message': 'starting...'}, 200
         return {'message': 'no hit extend needed.'}, 200
 
+class BOPoints(Resource):
+    def __init__(self, **kwargs):
+        self.repo = kwargs['data']
+        self.selector = kwargs['selector']
+
+    def get(self, course_id):
+        traj = []
+        params = []
+        try:
+            exps = self.repo.get_experiments(course_id)
+            now = int(time.time())
+            exp = None
+            for e in exps:
+                if e['start_time'] < now and e['end_time'] > now:
+                    exp = e
+            if exp is None:
+                append_to_log("NO current experiment found for Bayesian Optimization on course: " + course_id + ". Cannot find BO points.", self.repo)
+                return {'message': "No experiment found for BO"}, 500
+            #get list of skills up in this business
+            skills = self.repo.get_skills(course_id)
+            if 'None' in skills:
+                skills.remove('None')
+            users = self.repo.get_subjects(course_id, exp['experiment_name'])
+            blobs = edx_adapt.misc.psiturk_with_bo.get_blobs_with_params(self.repo, self.selector, course_id, users, skills)
+            traj, params = edx_adapt.misc.psiturk_with_bo.transform_blobs_for_BO(blobs)
+        except DataException as e:
+            abort(500, message=str(e))
+        except SelectException as e:
+            abort(500, message=str(e))
+
+        points = (traj, params)
+        return {'BO_points': points}, 200
+
 
 
 #endpoint for admins to hit to start up another BO+Turk loop if things go sideways (as they're want to do)

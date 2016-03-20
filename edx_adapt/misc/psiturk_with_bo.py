@@ -25,8 +25,8 @@ import edx_adapt.api.resources.etc_resources as etc_resources
 import SUPER_SECRET_FILE
 
 # connect to turk
-host = 'mechanicalturk.sandbox.amazonaws.com'
-# host = 'mechanicalturk.amazonaws.com'
+#host = 'mechanicalturk.sandbox.amazonaws.com'
+host = 'mechanicalturk.amazonaws.com'
 mturkparams = dict(aws_access_key_id=SUPER_SECRET_FILE.aws_access_key_id,
                    aws_secret_access_key=SUPER_SECRET_FILE.aws_secret_access_key,
                    host=host)

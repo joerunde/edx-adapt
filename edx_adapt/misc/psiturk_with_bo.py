@@ -55,7 +55,7 @@ def psiturk_hit_check(repo):
         #don't extend more in this case
         return False
 
-    if int(hit.NumberOfAssignmentsAvailable) > 0:
+    if int(hit.NumberOfAssignmentsAvailable + hit.NumberOfAssignmentsPending) > 0:
         return False
 
     return True
@@ -209,7 +209,7 @@ def run_BO(blobs, course_id):
             remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
             return
 
-        if int(hit.NumberOfAssignmentsAvailable) > 0:
+        if int(hit.NumberOfAssignmentsAvailable + hit.NumberOfAssignmentsPending) > 0:
             remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + " available), not extending HIT")
             return
 

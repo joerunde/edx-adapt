@@ -7,7 +7,7 @@ from edx_adapt.data.interface import DataException
 from edx_adapt.select.interface import SelectException
 import edx_adapt.misc.psiturk_with_bo
 
-import time, datetime
+import time, datetime, thread
 
 bo_parser = reqparse.RequestParser()
 bo_parser.add_argument('parameters', type=dict, required=True, location='json', help="Please supply parameters from BO")
@@ -195,6 +195,22 @@ class BOPoints(Resource):
         return {'BO_points': points}, 200
 
 
+
+borun_parser = reqparse.RequestParser()
+borun_parser.add_argument('trajectories', type=dict, required=True, location='json', help="Please supply previous trajectories")
+
+#endpoint to just run BO
+class BORunner(Resource):
+    def __init__(self, **kwargs):
+        self.repo = kwargs['data']
+        self.selector = kwargs['selector']
+
+    def post(self, course_id):
+        # not getting anything, just asking for another loop to start
+        args = borun_parser.parse_args()
+        trajectories = args['trajectories']
+        thread.start_new_thread(edx_adapt.misc.psiturk_with_bo.run_BO, (trajectories, course_id))
+        return {'message': 'starting...'}, 200
 
 #endpoint for admins to hit to start up another BO+Turk loop if things go sideways (as they're want to do)
 class LoopRunner(Resource):

@@ -3,7 +3,7 @@
 
 USE_PSITURK_AND_BAYESIAN_OPT = True
 
-import sys, os, time, thread, requests
+import sys, os, time, thread, requests, threading
 import traceback
 import numpy as np
 import cPickle
@@ -36,6 +36,7 @@ headers = {'Content-type': 'application/json'}
 
 #edx_app host
 HOSTNAME = 'cmustats.tk'
+BO_SERVER_HOST = '54.165.222.209'
 
 def psiturk_hit_check(repo):
     # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
@@ -134,7 +135,11 @@ def set_next_users_parameters(repo, selector, course_id):
 
         ########## start new thread to run Bayesian Optimization
         # This is important- BO could take a while and the thread running here needs to be serving the REST api
-        thread.start_new_thread(run_BO, (trajectories, course_id))
+        # thread.start_new_thread(run_BO, (trajectories, course_id))
+
+        ######## Now we're running BO on a totally different server
+        response = requests.post('http://'+BO_SERVER_HOST+':9000/api/v1/misc/RunBO/course/' + course_id,
+                                     data=json.dumps({'trajectories': trajectories}), headers=headers)
 
     except DataException as e:
         print(str(e) + "\n")
@@ -149,83 +154,92 @@ def remote_log(host, log):
     response = requests.post('http://'+host+':9000/api/v1/misc/log',
                                  data=json.dumps({'log':log}), headers=headers)
 
+bo_lock = threading.Lock()
+
 def run_BO(blobs, course_id):
-    #do a little data shuffling here, need a slightly different format than the web api serves
-    traj, params = transform_blobs_for_BO(blobs)
 
-    print("Successfully spun up run_BO thread\n")
-    print params
+    successfully_acquired = bo_lock.acquire(False)
+    if successfully_acquired:
+        #do a little data shuffling here, need a slightly different format than the web api serves
+        traj, params = transform_blobs_for_BO(blobs)
 
-    try:
-        print traj
-
+        remote_log(HOSTNAME, "Successfully reached BO code\n")
         print params
 
-        next_params = bo_edu.next_moe_pts_edu_stateless_boexpt2(traj, params)[0]
-
-        idx_to_name = bo_edu.SKILL_ID_TO_SKILL_NAME
-
-        tutor_params = {}
-        # next_params is a list of lists of parameters
-        for c in range(len(next_params)):
-            skill = idx_to_name[c]
-            x = next_params[c]
-            #[pdct["pl"], pdct["pt"], pdct["pg"], pdct["ps"], pdct["th"]]
-            params = {'pi': x[0], 'pt': x[1], 'pg': x[2], 'ps': x[3], 'threshold': x[4] }
-            tutor_params[skill] = params
-
-        #log the BO result on the server:
-        remote_log(HOSTNAME, "Calculated next parameters with BO: " + json.dumps(tutor_params))
-
-        #ping back the server with the new parameters
-        response = requests.post('http://'+HOSTNAME+':9000/api/v1/misc/SetBOParams',
-                                 data=json.dumps({'course_id':course_id, 'parameters': tutor_params}), headers=headers)
-        remote_log(HOSTNAME, "Sent parameters to server, server responded with: " + str(response.json()))
-
-        # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
-        response = requests.get('http://'+HOSTNAME+':9000/api/v1/misc/hitID')
-        hitid = ''
         try:
-            hitid = response.json()['hitid']
+            print traj
+
+            print params
+
+            next_params = bo_edu.next_moe_pts_edu_stateless_boexpt2(traj, params)[0]
+
+            idx_to_name = bo_edu.SKILL_ID_TO_SKILL_NAME
+
+            tutor_params = {}
+            # next_params is a list of lists of parameters
+            for c in range(len(next_params)):
+                skill = idx_to_name[c]
+                x = next_params[c]
+                #[pdct["pl"], pdct["pt"], pdct["pg"], pdct["ps"], pdct["th"]]
+                params = {'pi': x[0], 'pt': x[1], 'pg': x[2], 'ps': x[3], 'threshold': x[4] }
+                tutor_params[skill] = params
+
+            #log the BO result on the server:
+            remote_log(HOSTNAME, "Calculated next parameters with BO: " + json.dumps(tutor_params))
+
+            #ping back the server with the new parameters
+            response = requests.post('http://'+HOSTNAME+':9000/api/v1/misc/SetBOParams',
+                                     data=json.dumps({'course_id':course_id, 'parameters': tutor_params}), headers=headers)
+            remote_log(HOSTNAME, "Sent parameters to server, server responded with: " + str(response.json()))
+
+            # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
+            response = requests.get('http://'+HOSTNAME+':9000/api/v1/misc/hitID')
+            hitid = ''
+            try:
+                hitid = response.json()['hitid']
+            except Exception as e:
+                remote_log(HOSTNAME, "Server error getting response from /hitID. Maybe no HIT ID set? Exiting loop.")
+                return
+
+            remote_log(HOSTNAME, "Received HIT ID from server: " + hitid)
+
+            #assignment_list = mturk_conn.get_assignments(hitid)
+            hit = None
+            try:
+                hit, = mturk_conn.get_hit(hitid, ['HITDetail', 'HITAssignmentSummary'])
+            except Exception as e:
+                remote_log(HOSTNAME, "Error retrieving HIT from mturk, exiting loop: " + str(e))
+                return
+
+            print str(hit)
+            remote_log(HOSTNAME, "mturk_conn.get_hit() returned: " + str(hit))
+
+            if int(hit.MaxAssignments) >= 9:
+                #don't extend more in this case
+                remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
+                return
+
+            if int(hit.NumberOfAssignmentsAvailable + hit.NumberOfAssignmentsPending) > 0:
+                remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + " available), not extending HIT")
+                return
+
+            try:
+                r = mturk_conn.extend_hit(hitid, assignments_increment=1)
+                print str(r)
+                remote_log(HOSTNAME, "mturk_conn.extend_hit() returned: " + str(r))
+                r = mturk_conn.extend_hit(hitid, expiration_increment=3600 * 3)
+                print str(r)
+                remote_log(HOSTNAME, "mturk_conn.extend_hit() returned: " + str(r))
+            except Exception as e:
+                remote_log(HOSTNAME, "Exception extending hit, loop failed: " + str(e))
+
         except Exception as e:
-            remote_log(HOSTNAME, "Server error getting response from /hitID. Maybe no HIT ID set? Exiting loop.")
-            return
-
-        remote_log(HOSTNAME, "Received HIT ID from server: " + hitid)
-
-        #assignment_list = mturk_conn.get_assignments(hitid)
-        hit = None
-        try:
-            hit, = mturk_conn.get_hit(hitid, ['HITDetail', 'HITAssignmentSummary'])
-        except Exception as e:
-            remote_log(HOSTNAME, "Error retrieving HIT from mturk, exiting loop: " + str(e))
-            return
-
-        print str(hit)
-        remote_log(HOSTNAME, "mturk_conn.get_hit() returned: " + str(hit))
-
-        if int(hit.MaxAssignments) >= 9:
-            #don't extend more in this case
-            remote_log(HOSTNAME, "Maximum number of hits reached (" + str(hit.MaxAssignments) + "), not extending HIT")
-            return
-
-        if int(hit.NumberOfAssignmentsAvailable + hit.NumberOfAssignmentsPending) > 0:
-            remote_log(HOSTNAME, "Error, >0 assignments outstanding: (" + str(hit.NumberOfAssignmentsPending) + " pending, " +  str(hit.NumberOfAssignmentsAvailable) + " available), not extending HIT")
-            return
-
-        try:
-            r = mturk_conn.extend_hit(hitid, assignments_increment=1)
-            print str(r)
-            remote_log(HOSTNAME, "mturk_conn.extend_hit() returned: " + str(r))
-            r = mturk_conn.extend_hit(hitid, expiration_increment=3600 * 3)
-            print str(r)
-            remote_log(HOSTNAME, "mturk_conn.extend_hit() returned: " + str(r))
-        except Exception as e:
-            remote_log(HOSTNAME, "Exception extending hit, loop failed: " + str(e))
-
-    except Exception as e:
-        remote_log(HOSTNAME, "some other random exception in the loop happened?: " + str(e))
-        print "gg, BO broke."
-        print(str(e) + "\n")
-        print traceback.format_exc()
-        raise e
+            remote_log(HOSTNAME, "some other random exception in the loop happened?: " + str(e))
+            print "gg, BO broke."
+            print(str(e) + "\n")
+            print traceback.format_exc()
+            raise e
+        finally:
+            bo_lock.release()
+    else:
+        remote_log(HOSTNAME, "Did not reach BO code. Is BO already running?")

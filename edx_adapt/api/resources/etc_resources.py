@@ -197,7 +197,7 @@ class BOPoints(Resource):
 
 
 borun_parser = reqparse.RequestParser()
-borun_parser.add_argument('trajectories', type=dict, required=True, location='json', help="Please supply previous trajectories")
+borun_parser.add_argument('trajectories', type=list, required=True, location='json', help="Please supply previous trajectories")
 
 #endpoint to just run BO
 class BORunner(Resource):

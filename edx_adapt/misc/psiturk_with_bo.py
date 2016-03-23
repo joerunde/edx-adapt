@@ -141,6 +141,8 @@ def set_next_users_parameters(repo, selector, course_id):
         response = requests.post('http://'+BO_SERVER_HOST+':9000/api/v1/misc/RunBO/course/' + course_id,
                                      data=json.dumps({'trajectories': trajectories}), headers=headers)
 
+        etc_resources.append_to_log("BO server said: " + str(response.json()), repo)
+
     except DataException as e:
         print(str(e) + "\n")
     except SelectException as e:

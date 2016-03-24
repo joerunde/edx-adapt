@@ -36,7 +36,7 @@ headers = {'Content-type': 'application/json'}
 
 #edx_app host
 HOSTNAME = 'cmustats.tk'
-BO_SERVER_HOST = '54.165.222.209'
+BO_SERVER_HOST = '52.90.159.67'
 
 def psiturk_hit_check(repo):
     # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT

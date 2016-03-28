@@ -161,6 +161,18 @@ class HitChecker5000(Resource):
             return {'message': 'starting...'}, 200
         return {'message': 'no hit extend needed.'}, 200
 
+class HitExtendNoBO(Resource):
+    def __init__(self, **kwargs):
+        self.repo = kwargs['data']
+        self.selector = kwargs['selector']
+
+    def get(self):
+        extend = edx_adapt.misc.psiturk_with_bo.psiturk_hit_check(self.repo, 2)
+        if extend:
+            extended = edx_adapt.misc.psiturk_with_bo.extend_hit(self.repo)
+            return {'extended': extended}, 200
+        return {'message': 'no hit extend needed.', 'extended': False}, 200
+
 class BOPoints(Resource):
     def __init__(self, **kwargs):
         self.repo = kwargs['data']

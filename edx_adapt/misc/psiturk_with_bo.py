@@ -38,7 +38,7 @@ headers = {'Content-type': 'application/json'}
 HOSTNAME = 'cmustats.tk'
 BO_SERVER_HOST = '52.90.159.67'
 
-def psiturk_hit_check(repo):
+def psiturk_hit_check(repo, limit=0):
     # Okay, the BO params are all loaded (assuming that worked). Now tell psiturk to open another HIT
     hitid = ''
     try:
@@ -56,10 +56,29 @@ def psiturk_hit_check(repo):
         #don't extend more in this case
         return False
 
-    if int(hit.NumberOfAssignmentsAvailable + hit.NumberOfAssignmentsPending) > 0:
+    if int(hit.NumberOfAssignmentsAvailable + hit.NumberOfAssignmentsPending) > limit:
         return False
 
     return True
+
+def extend_hit(repo):
+    try:
+        hitid = repo.get("__HITID__")
+        etc_resources.append_to_log("Hit ID to extend: " + str(hitid), repo)
+    except Exception as e:
+        etc_resources.append_to_log("Hit ID not found :(")
+        return False
+    try:
+        r = mturk_conn.extend_hit(hitid, assignments_increment=1)
+        etc_resources.append_to_log("mturk_conn.extend_hit() returned: " + str(r), repo)
+        r = mturk_conn.extend_hit(hitid, expiration_increment=3600 * 3)
+        print str(r)
+        etc_resources.append_to_log("mturk_conn.extend_hit() returned: " + str(r), repo)
+    except Exception as e:
+        etc_resources.append_to_log("Exception extending hit: " + str(e), repo)
+        return False
+    return True
+
 
 
 def get_blobs_with_params(repo, selector, course, users, skills):

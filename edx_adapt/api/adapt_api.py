@@ -11,6 +11,7 @@ import resources.etc_resources as ER
 # import data and model stuff
 import edx_adapt.data.course_repository as repo
 import edx_adapt.data.tinydb_storage as store
+import edx_adapt.data.sqlite_storage as sqlitestore
 import edx_adapt.select.skill_separate_random_selector as select
 import edx_adapt.model.bkt as bkt
 
@@ -21,7 +22,8 @@ api = Api(app)
 # TODO: load from settings
 base = '/api/v1'
 
-database = repo.CourseRepository(store.TinydbStorage('/tmp/2.json'))
+#database = repo.CourseRepository(store.TinydbStorage('/tmp/2.json'))
+database = repo.CourseRepository(sqlitestore.SqliteStorage('/tmp/edx_adapt.db'))
 student_model = bkt.BKT()
 selector = select.SkillSeparateRandomSelector(database, student_model, "user skill")
 
@@ -91,7 +93,7 @@ def page_not_found(e):
 
 
 def run():
-    app.run(host='0.0.0.0', port=9000)
+    app.run(host='0.0.0.0', port=9000, threaded=True)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9000)

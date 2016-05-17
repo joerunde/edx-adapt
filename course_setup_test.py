@@ -117,7 +117,7 @@ for row in table:
     print str(r) + str(r.json())
 
 
-payload = json.dumps({'experiment_name':'test_experiment', 'start_time':0, 'end_time':1999999999})
+payload = json.dumps({'experiment_name':'test_experiment2', 'start_time':1462736963, 'end_time':1999999999})
 r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101/experiment', data=payload, headers=headers)
 print str(r) + str(r.json())
 

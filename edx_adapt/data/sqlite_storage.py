@@ -22,9 +22,13 @@ class SqliteStorage(interface.StorageInterface):
 
     def create_table(self, table_name):
         self._assert_no_table(table_name)
-        self.table_names['tables'].append(table_name)
+        l = self.table_names['tables']
+        l.append(table_name)
+        self.table_names['tables'] = l
         table = SqliteDict(self.path, tablename=table_name, autocommit=True)
         self.tables[table_name] = table
+
+        print self.table_names['tables']
 
     def get_tables(self):
         #just return table names, not actual tables
@@ -51,7 +55,8 @@ class SqliteStorage(interface.StorageInterface):
         #TODO: check if l is a list maybe
         if val in l:
             raise interface.DataException("Value: {0} already exists in list: {1}".format(val, list_key))
-        table[list_key].append(val)
+        l.append(val)
+        table[list_key] = l
 
     def remove(self, table_name, list_key, val):
         #TODO: do
@@ -63,4 +68,5 @@ class SqliteStorage(interface.StorageInterface):
 
     def _assert_table(self, table_name):
         if table_name not in self.table_names['tables']:
+            print self.table_names['tables']
             raise interface.DataException("Table does not exist: {}".format(table_name))

@@ -1,5 +1,6 @@
 import requests, json, sys
 
+DO_BASELINE_SETUP = False
 
 host = sys.argv[1]
 
@@ -121,4 +122,13 @@ payload = json.dumps({'experiment_name':'test_experiment', 'start_time':0, 'end_
 r = requests.post('http://'+host+':9000/api/v1/course/CMUSTAT101/experiment', data=payload, headers=headers)
 print str(r) + str(r.json())
 
+
+if DO_BASELINE_SETUP:
+    params = {'pi': 0.1, 'pt': 0.1, 'pg': 0.1, 'ps': 0.1, 'threshold': 1.0 }
+    tutor_params = {}
+    for c in ['d to h', 'y axis', 'h to d', 'center', 'shape', 'x axis', 'histogram', 'spread']:
+        tutor_params[skill] = params
+    #ping back the server with the new parameters
+    response = requests.post('http://'+host+':9000/api/v1/misc/SetBOParams',
+                             data=json.dumps({'course_id':'CMUSTAT101', 'parameters': tutor_params}), headers=headers)
 

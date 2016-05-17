@@ -83,7 +83,7 @@ class SkillSeparateRandomSelector(SelectInterface):
             #if pretest problems are left, give the next one
             pretest_problems = self.data_interface.get_all_remaining_pretest_problems(course_id, user_id)
             if len(pretest_problems) > 0:
-                for id in range(13):
+                for id in range(14):
                     prob = 'Pre_assessment_'+str(id)
                     for pre_prob in pretest_problems:
                         if pre_prob['problem_name'] == prob:
@@ -111,7 +111,7 @@ class SkillSeparateRandomSelector(SelectInterface):
             if len( [x for x in self.data_interface.get_all_interactions(course_id, user_id) if x['problem']['posttest']]) > 0:
                 post = self.data_interface.get_all_remaining_posttest_problems(course_id, user_id)
                 if len(post) > 0:
-                    for id in range(13):
+                    for id in range(14):
                         prob = 'Post_assessment_'+str(id)
                         for post_prob in post:
                             if post_prob['problem_name'] == prob:

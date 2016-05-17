@@ -14,6 +14,9 @@ from edx_adapt.misc import psiturk_with_bo
 
 """ Handle request for user's current and next problem """
 class UserProblems(Resource):
+    # Name of the question to test whether the user is paying attention on pretest.
+    ATTENTION_QUESTION_NAME = 'Pre_assessment_13'
+
     def __init__(self, **kwargs):
         self.repo = kwargs['data']
         """@type repo: DataInterface"""
@@ -52,9 +55,22 @@ class UserProblems(Resource):
                 if user_id in fin:
                     done_with_course = True
                 #reject high pretest scores
-                if sum([x['correct'] for x in self.repo.get_all_interactions(course_id, user_id) if x['problem']['pretest']]) > 7:
+                # if more than 7 out of the first 13 pretest questions are correct -
+                # then the user knows too much already (ATTENTION_QUESTION_NAME
+                # is only for checking that the user is paying attention,
+                # not knowledge assessment, so skip it)
+                answers = self.repo.get_all_interactions(course_id, user_id)
+                if sum( [x['correct'] for x in answers if (x['problem']['pretest'] and x['problem']['problem_name'] != UserProblems.ATTENTION_QUESTION_NAME) ] ) > 7:
                     done_with_course = True
                     nex = None
+                # if answer to ATTENTION_QUESTION_NAME is wrong -
+                # then filter out this user, because they are not paying
+                # attention and simply clicking buttons
+                pretest_done = len(self.repo.get_all_remaining_pretest_problems(course_id, user_id)) == 0
+                if pretest_done and (sum( [x['correct'] for x in answers if (x['problem']['pretest'] and x['problem']['problem_name'] == UserProblems.ATTENTION_QUESTION_NAME) ] ) < 1):
+                    done_with_course = True
+                    nex = None
+
 
             except DataException as e:
                 print("--------------------\tDATA EXCEPTION: " + str(e))

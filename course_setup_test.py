@@ -126,7 +126,7 @@ print str(r) + str(r.json())
 if DO_BASELINE_SETUP:
     params = {'pi': 0.1, 'pt': 0.1, 'pg': 0.1, 'ps': 0.1, 'threshold': 1.0 }
     tutor_params = {}
-    for c in ['d to h', 'y axis', 'h to d', 'center', 'shape', 'x axis', 'histogram', 'spread']:
+    for skill in ['d to h', 'y axis', 'h to d', 'center', 'shape', 'x axis', 'histogram', 'spread']:
         tutor_params[skill] = params
     #ping back the server with the new parameters
     response = requests.post('http://'+host+':9000/api/v1/misc/SetBOParams',

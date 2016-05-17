@@ -2,7 +2,7 @@
 # Also use MOE to set user parameters using Bayesian Optimization
 
 USE_PSITURK_AND_BAYESIAN_OPT = True
-DO_BASELINE = True
+DO_BASELINE = False
 
 import sys, os, time, thread, requests, threading
 import traceback
@@ -124,6 +124,9 @@ def set_next_users_parameters(repo, selector, course_id):
     """@type repo: DataInterface """
 
     if DO_BASELINE:
+        #uncomment this to do 1 at a time
+        #if psiturk_hit_check(repo):
+        #    extend_hit(repo)
         extend_hit(repo)
 
     etc_resources.append_to_log("Attempting to set next user's parameters for: " + course_id, repo)
